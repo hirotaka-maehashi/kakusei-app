@@ -1,0 +1,182 @@
+.container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  min-height: 100vh; /* ✅ 高さ確保 */
+  padding-bottom: 10rem; /* ✅ フッターやボタンのための余白 */
+  background-color: #f9f9f9;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.heading {
+  font-size: 1.75rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #ccc;
+  padding-bottom: 0.5rem;
+}
+
+.section {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem; /* ✅ セクション同士の余白 */
+}
+
+.section p {
+  margin: 0.5rem 0;
+  font-size: 1rem;
+  line-height: 1.6; /* ✅ 行間を少し広くして読みやすく */
+}
+
+.backButton {
+  padding: 0.5rem 1.2rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border: none;
+  color: white;
+}
+
+/* メインアクション用（青） */
+.primaryButton {
+  background-color: #2563eb;
+}
+
+.primaryButton:hover {
+  background-color: #1d4ed8;
+}
+
+/* サブアクション用（グレー） */
+.secondaryButton {
+  background-color: #398b62;
+}
+
+.secondaryButton:hover {
+  background-color: #4b5563;
+}
+
+.buttonRow {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.shotCard {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background-color: #f9f9f9;
+  font-size: 0.95rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.resultBadge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  border-radius: 12px;
+  color: white;
+}
+
+.goal {
+  background-color: #16a34a; /* 緑 */
+}
+
+.noGoal {
+  background-color: #dc2626; /* 赤 */
+}
+
+.resultBadge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  border-radius: 12px;
+  color: white;
+}
+
+.goal {
+  background-color: #16a34a; /* 緑 */
+}
+
+.noGoal {
+  background-color: #dc2626; /* 赤 */
+}
+
+.save {
+  background-color: #2563eb; /* 青 */
+}
+
+.noSave {
+  background-color: #f97316; /* オレンジ */
+}
+
+.note {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+.analysisBadge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  border-radius: 6px;
+  margin-left: 0.5rem;
+}
+
+.good {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.bad {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.avg {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.statRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.3rem;
+  font-size: 1rem;
+}
+
+.analysisBadge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: bold;
+  border-radius: 6px;
+  margin-left: 0.5rem;
+}
+
+.good {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.bad {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.avg {
+  background-color: #e5e7eb;
+  color: #374151;
+}

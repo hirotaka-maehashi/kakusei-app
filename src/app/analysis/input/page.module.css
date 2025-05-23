@@ -1,0 +1,205 @@
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+  min-height: 100vh;
+  box-sizing: border-box;
+  overflow-y: auto;
+  padding-bottom: 10rem;
+  -webkit-overflow-scrolling: touch; /* ✅ iOS Safari対応（慣性スクロール） */
+  overscroll-behavior: contain;       /* ✅ スクロールの親への伝播を防ぐ */
+}
+
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #004080;
+  padding: 1rem 1.5rem;
+  color: white;
+}
+
+.headerTitle {
+  font-size: 1.5rem;
+  font-weight: bold;
+  flex: 1;
+  text-align: center;
+}
+
+
+.headerMenu {
+  position: relative;
+}
+
+.menuButton {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+.dropdown {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: max-content; /* ✅ 内容に応じて幅を調整 */
+  min-width: 120px; /* ✅ 最低幅を設定 */
+  z-index: 100;
+}
+
+.dropdown button {
+  padding: 0.5rem 1rem;
+  display: block;
+  white-space: nowrap; /* ✅ 改行させない */
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.dropdown button:hover {
+  background-color: #f0f0f0;
+}
+
+.pageTitle {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #ccc;
+  padding-bottom: 0.5rem;
+}
+
+.section {
+margin-bottom: 2rem;
+padding: 1rem;
+background-color: #f9f9f9;
+border-left: 4px solid #004080;
+border-radius: 4px;
+margin: 2rem auto;
+padding: 1rem 1.5rem;
+background-color: #f9f9f9;
+border-left: 4px solid #004080;
+border-radius: 6px;
+max-width: 600px;
+box-sizing: border-box;
+}
+
+.section h2 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.section input,
+.section textarea,
+.section select {
+  display: block;
+  width: 100%;
+  max-width: 400px;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 1rem;
+}
+
+.section label {
+  font-weight: bold;
+  margin-top: 1rem;
+  display: block;
+}
+
+.section p {
+  margin: 0.5rem 0;
+}
+
+.button {
+  background-color: #2563eb;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+.button:hover {
+  background-color: #1e4ed8;
+}
+
+.myButton {
+  background-color: #2563eb;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+.myButton:hover {
+  background-color: #1e4ed8;
+}
+
+.shotCard {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background-color: #f9f9f9;
+  position: relative;
+}
+
+.shotCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.deleteButton {
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.deleteButton:hover {
+  background-color: #b91c1c;
+}
+
+.react-select {
+  width: 100%;
+  max-width: 100%;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  box-sizing: border-box;
+}
+
+.react-select__control {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  min-height: 38px;
+  padding: 0 0.5rem;
+  font-size: 1rem;
+}
+
+.react-select__placeholder,
+.react-select__single-value,
+.react-select__menu {
+  font-size: 1rem;
+}
+
+.section :global(.react-select__control) {
+  width: 100%;
+}

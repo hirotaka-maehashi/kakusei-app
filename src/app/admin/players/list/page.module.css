@@ -1,0 +1,147 @@
+.container {
+  padding: 1rem;
+  font-family: sans-serif;
+  min-height: 100vh;         /* ビューポートいっぱい */
+  overflow-y: auto;          /* 明示的に縦スクロール可 */
+  box-sizing: border-box;
+}
+
+.heading {
+  font-size: 1.4rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  color: #0d3b84;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+  font-size: 0.75rem; /* ✅ 小さめ文字で全体が収まるように */
+  min-width: 560px;   /* ✅ 小さすぎないよう最小幅を設定 */
+}
+
+.table th,
+.table td {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #ccc;
+  text-align: left;
+  white-space: nowrap; /* ✅ 折返し防止 */
+}
+
+.table th {
+  background-color: #f2f2f2;
+  color: #333;
+}
+
+.backButton {
+  padding: 0.5rem 1rem;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.backButton:hover {
+  background-color: #1e40af;
+}
+
+.actionButton {
+  padding: 0.3rem 0.8rem;
+  font-size: 0.75rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 0.4rem;
+  transition: background-color 0.2s ease;
+}
+
+.editButton {
+  background-color: #3b82f6; /* 青 */
+  color: white;
+}
+
+.editButton:hover {
+  background-color: #2563eb;
+}
+
+.deleteButton {
+  background-color: #ef4444; /* 赤 */
+  color: white;
+}
+
+.deleteButton:hover {
+  background-color: #dc2626;
+}
+
+.saveButton {
+  background-color: #10b981; /* 緑系 */
+  color: white;
+}
+
+.saveButton:hover {
+  background-color: #059669;
+}
+
+.cancelButton {
+  background-color: #e5e7eb; /* 薄グレー */
+  color: #333;
+}
+
+.cancelButton:hover {
+  background-color: #d1d5db;
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.modal {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  max-width: 320px;
+  width: 100%;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.modalButtons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+}
+
+.modal button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.modal .deleteButton {
+  background-color: #dc2626;
+  color: white;
+}
+
+.modal .deleteButton:hover {
+  background-color: #b91c1c;
+}

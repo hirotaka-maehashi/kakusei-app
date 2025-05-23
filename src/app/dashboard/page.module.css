@@ -1,0 +1,313 @@
+/* styles.module.css */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: #0d3b84;
+  color: white;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.headerTitle {
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-align: center;
+  flex: 1;
+}
+
+.headerIcon {
+  width: 24px; /* スペース用 */
+}
+
+.headerLogout {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.headerMenu {
+  position: relative;
+}
+
+.dropdown {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  background: white;
+  color: #333;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  z-index: 1000;
+}
+
+.dropdown button {
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dropdown button:hover {
+  background-color: #f3f4f6;
+}
+
+.container {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  background: #f7f9fc;
+  min-height: 100vh;
+  padding-bottom: 10rem;
+  overflow-y: auto; /* ✅ これを追加 */
+  box-sizing: border-box; 
+}
+
+
+.menuButton {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.dropdown {
+  position: absolute;
+  top: 56px;
+  right: 1rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  min-width: 160px;
+}
+
+.dropdown button {
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 0.95rem;
+  color: #333;
+  cursor: pointer;
+}
+
+.dropdown button:hover {
+  background-color: #f3f4f6;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  font-family: 'Helvetica Neue', sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.heading {
+  font-size: 1.6rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.infoBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1rem;
+  color: #333;
+  padding: 0.25rem 0;
+  border-bottom: 1px dashed #e0e0e0;
+}
+
+.label {
+  font-weight: 600;
+  color: #666;
+  flex: 1;
+}
+
+.message {
+  font-size: 0.95rem;
+  color: #1d4ed8;
+  margin-bottom: 1.5rem;
+}
+
+.logoutButton {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 9999px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.pageTitle {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #0d3b84;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.5rem;
+}
+
+.section {
+  background: #fff;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
+}
+
+.scoreRow {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1d4ed8;
+}
+
+.possessionBlock {
+  background-color: #f9fafb;
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.buttonArea {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.detailButton {
+  background-color: #0d3b84;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.detailButton:hover {
+  background-color: #0b2f6b;
+}
+
+.playerSection {
+  margin-top: 3rem;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.newPlayerButton {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.newPlayerButton:hover {
+  background-color: #1e40af;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  border: 1px solid #ccc;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.table th {
+  background-color: #f0f0f0;
+}
+
+.sectionTitle {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 0.75rem;
+  margin-top: 2rem;
+  color: #333;
+}
+
+.topTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+  font-size: 0.9rem;
+}
+
+.topTable th,
+.topTable td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #ccc;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.teamSelector {
+  margin: 1rem 0;
+  padding: 0.5rem 1rem;
+  background-color: #e5e7eb;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.teamSelector label {
+  font-weight: bold;
+  color: #0d3b84;
+}
+
+.teamSelector select {
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.95rem;
+  background-color: white;
+}
