@@ -514,20 +514,24 @@ return (
       const value = e.target.value
       setSelectedCategory(value)
 
-      const base = value
-        .replace('男子', '')
-        .replace('女子', '')
-        .replace('-', '')
-        .toLowerCase()
+      const categoryMap: Record<string, { categoryValue: string; gender: string }> = {
+        'U-12男子': { categoryValue: 'u12', gender: 'male' },
+        'U-12女子': { categoryValue: 'u12', gender: 'female' },
+        'U-15男子': { categoryValue: 'u15', gender: 'male' },
+        'U-15女子': { categoryValue: 'u15', gender: 'female' },
+        'U-18男子': { categoryValue: 'u18', gender: 'male' },
+        'U-18女子': { categoryValue: 'u18', gender: 'female' },
+        'プロ男子': { categoryValue: 'pro', gender: 'male' },
+        'プロ女子': { categoryValue: 'pro', gender: 'female' },
+        '世界男子': { categoryValue: 'world', gender: 'male' },
+        '世界女子': { categoryValue: 'world', gender: 'female' }
+      }
 
-      if (value.includes('男子')) {
-        setCategoryValue(base)
-        setSelectedGender('male')
-        console.log('✅ 分解結果:', base, 'male')
-      } else if (value.includes('女子')) {
-        setCategoryValue(base)
-        setSelectedGender('female')
-        console.log('✅ 分解結果:', base, 'female')
+      const mapping = categoryMap[value]
+      if (mapping) {
+        setCategoryValue(mapping.categoryValue)
+        setSelectedGender(mapping.gender)
+        console.log('✅ 分解結果:', mapping.categoryValue, mapping.gender)
       } else {
         setCategoryValue('')
         setSelectedGender('')

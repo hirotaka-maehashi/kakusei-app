@@ -22,7 +22,19 @@ export default function PlayerListPage() {
   const [editedPlayer, setEditedPlayer] = useState<Partial<Player>>({})
   const router = useRouter()
   const [authorized, setAuthorized] = useState(false)
-const [role, setRole] = useState<string | null>(null)
+  //const [role, setRole] = useState<string | null>(null)
+  const positionOrder = ['GK', 'DF', 'MF', 'FW']
+  const sortPlayers = (players: Player[]) => {
+  
+  return [...players].sort((a, b) => {
+    const posA = positionOrder.indexOf(a.position)
+    const posB = positionOrder.indexOf(b.position)
+    const aNum = a.uniform_number ?? Infinity
+    const bNum = b.uniform_number ?? Infinity
+
+    return posA !== posB ? posA - posB : aNum - bNum
+  })
+}
 
   useEffect(() => {
     const fetchPlayers = async () => {
@@ -45,19 +57,6 @@ const [role, setRole] = useState<string | null>(null)
     return dayjs().diff(dayjs(birthDate), 'year')
   }
 
-  const positionOrder = ['GK', 'DF', 'MF', 'FW']
-
-const sortPlayers = (players: Player[]) => {
-  return [...players].sort((a, b) => {
-    const posA = positionOrder.indexOf(a.position)
-    const posB = positionOrder.indexOf(b.position)
-    const aNum = a.uniform_number ?? Infinity
-    const bNum = b.uniform_number ?? Infinity
-
-    return posA !== posB ? posA - posB : aNum - bNum
-  })
-}
-
   const startEdit = (player: Player) => {
     setEditingId(player.id)
     setEditedPlayer(player)
@@ -75,7 +74,7 @@ const handleSave = async () => {
   console.log('📝 保存する内容（before trim）:', editedPlayer)
 
   // idを除外したオブジェクトを作成
-  const { id, ...updateData } = editedPlayer
+  const { ...updateData } = editedPlayer
 
   console.log('📤 Supabaseに送る内容:', updateData)
 
@@ -126,15 +125,15 @@ useEffect(() => {
     }
 
     // ✅ 管理者チェック
-    const { data: profile, error: profileError } = await supabase
-      .from('user_profiles')
-      .select('role')
-      .eq('id', user?.id || '')
-      .maybeSingle()
+    const { data: profile } = await supabase
+  .from('user_profiles')
+  .select('role')
+  .eq('id', user?.id || '')
+  .maybeSingle()
 
     if (profile?.role === 'admin') {
       setAuthorized(true)
-      setRole('admin')
+      //setRole('admin')
       return
     }
 
@@ -147,14 +146,14 @@ useEffect(() => {
 
     if (team && !teamError) {
       setAuthorized(true)
-      setRole('coach')
+      //setRole('coach')
       return
     }
 
     // ✅ 選手チェック：localStorage に playerId がある場合も許可
     if (playerId) {
       setAuthorized(true)
-      setRole('player')
+      //setRole('player')
       return
     }
 
@@ -165,11 +164,9 @@ useEffect(() => {
   checkAccess()
 }, [router])
 
-
 if (!authorized) {
   return <p style={{ padding: '2rem' }}>アクセス確認中...</p>
 }
-
 
 return (
   <main className={styles.container}>
