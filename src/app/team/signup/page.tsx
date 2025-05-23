@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { supabase } from '../../../../lib/supabase'
-import { useRouter } from 'next/navigation'
 import styles from './page.module.css'
 
 export default function TeamSignupPage() {
@@ -10,7 +9,6 @@ export default function TeamSignupPage() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [message, setMessage] = useState('')
-  const router = useRouter()
 
   const handleSignup = async () => {
     setMessage('登録中...')

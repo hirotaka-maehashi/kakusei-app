@@ -221,3 +221,10 @@
   font-weight: bold;
   min-width: 100px;
 }
+
+/* page.module.css */
+.roleLabel {
+  font-size: 0.9rem;
+  color: #555;
+  margin-top: 0.25rem;
+}

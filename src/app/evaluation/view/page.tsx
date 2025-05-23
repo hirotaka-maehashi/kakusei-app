@@ -5,17 +5,22 @@ import { supabase } from '@/lib/supabase'
 import styles from './page.module.css'
 import { useRouter } from 'next/navigation'
 
+type Player = { id: string; name: string }
+type EvaluationRecord = { recorded_at: string; [key: string]: string | number }
+type AvgData = Record<string, string>
+type BenchmarkData = Record<string, number>
+
 export default function EvaluationViewPage() {
-  const [players, setPlayers] = useState<any[]>([])
+  const [players, setPlayers] = useState<Player[]>([])
   const [selectedPlayerId, setSelectedPlayerId] = useState('')
-  const [evaluations, setEvaluations] = useState<any[]>([])
-  const [avgData, setAvgData] = useState<any>({})
-  const [latestData, setLatestData] = useState<any>({})
-const [benchmarkData, setBenchmarkData] = useState<any>({})
-const [selectedCategory, setSelectedCategory] = useState('') // 例: U-15男子
-const [categoryValue, setCategoryValue] = useState('') // 例: U-15
-const [selectedGender, setSelectedGender] = useState('') // male / female
-const router = useRouter()
+  const [evaluations, setEvaluations] = useState<EvaluationRecord[]>([])
+  const [avgData, setAvgData] = useState<AvgData>({})
+  const [latestData, setLatestData] = useState<EvaluationRecord>({} as EvaluationRecord)
+  const [benchmarkData, setBenchmarkData] = useState<BenchmarkData>({})
+  const [selectedCategory, setSelectedCategory] = useState('')
+  const [categoryValue, setCategoryValue] = useState('')
+  const [selectedGender, setSelectedGender] = useState('')
+  const router = useRouter()
 
 useEffect(() => {
   const playerId = typeof window !== 'undefined' ? localStorage.getItem('playerId') : null
@@ -79,9 +84,9 @@ useEffect(() => {
     }
 
     const map: Record<string, number> = {}
-    data?.forEach((row: any) => {
-      map[row.key] = row.value
-    })
+data?.forEach((row: { key: string; value: number }) => {
+  map[row.key] = row.value
+})
 
     setBenchmarkData(map)
   }
@@ -138,7 +143,6 @@ useEffect(() => {
       } else {
         setEvaluations([])
         setAvgData({})
-        setLatestData(null)
       }
     }
     fetchEvaluations()
@@ -439,8 +443,8 @@ function getEvaluationLabel(
 }
 
 const getDiff = (key: string) => {
-  const latestVal = parseFloat(latestData?.[key])
-  const benchVal = parseFloat(benchmarkData?.[key])
+  const latestVal = parseFloat(String(latestData?.[key]))
+const benchVal = parseFloat(String(benchmarkData?.[key]))
   if (!isNaN(latestVal) && !isNaN(benchVal)) {
     const diff = (latestVal - benchVal).toFixed(1)
     return diff === '0.0' ? '±0.0' : (parseFloat(diff) > 0 ? `+${diff}` : diff)
@@ -449,8 +453,8 @@ const getDiff = (key: string) => {
 }
 
 const getRawDiff = (key: string): number | null => {
-  const latestVal = parseFloat(latestData?.[key])
-  const benchVal = parseFloat(benchmarkData?.[key])
+  const latestVal = parseFloat(String(latestData?.[key]))
+const benchVal = parseFloat(String(benchmarkData?.[key]))
   if (!isNaN(latestVal) && !isNaN(benchVal)) {
     return parseFloat((latestVal - benchVal).toFixed(1))
   }

@@ -7,6 +7,51 @@ import styles from './page.module.css'
 import { Menu } from 'lucide-react'
 import dayjs from 'dayjs'
 
+// ✅ typeはすべてここ（関数の外）にまとめる
+type MatchAnalysis = {
+  id: string
+  match_date: string
+  opponent: string
+  score_for: number
+  score_against: number
+  location: string
+  weather: string
+  analysis_json: {
+    teamHold?: {
+      firstMin?: number
+      firstSec?: number
+      secondMin?: number
+      secondSec?: number
+    }
+    opponentHold?: {
+      firstMin?: number
+      firstSec?: number
+      secondMin?: number
+      secondSec?: number
+    }
+    // 他に含まれる可能性がある要素（例: shots）もここに追加可
+  }
+}
+
+type Player = {
+  id: string
+  name: string
+  uniform_number: number | null
+  position: string | null
+  birth_date: string | null
+}
+
+type Evaluation = {
+  player_id: string
+  recorded_at: string
+  [key: string]: string | number | null
+}
+
+type Team = {
+  id: string
+  name: string
+}
+
 const calculateAge = (birthDate: string): number => {
   return dayjs().diff(dayjs(birthDate), 'year')
 }
@@ -17,15 +62,13 @@ export default function DashboardPage() {
   const [adminName, setAdminName] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [teamId, setTeamId] = useState<string | null>(null)
-  const [players, setPlayers] = useState<any[]>([])
-  const [playerEvaluations, setPlayerEvaluations] = useState<any[]>([])
-  const [latestMatch, setLatestMatch] = useState<any>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const router = useRouter()
   const menuRef = useRef<HTMLDivElement>(null)
-  const playerId = typeof window !== 'undefined' ? localStorage.getItem('playerId') : null
-  const [teamList, setTeamList] = useState<any[]>([])
-
+  const [latestMatch, setLatestMatch] = useState<MatchAnalysis | null>(null)
+  const [players, setPlayers] = useState<Player[]>([])
+  const [playerEvaluations, setPlayerEvaluations] = useState<Evaluation[]>([])
+  const [teamList, setTeamList] = useState<Team[]>([])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -51,49 +94,50 @@ export default function DashboardPage() {
     return latest?.format('YYYY年M月D日')
   }, [playerEvaluations])
 
-  const highIsBetter = [
-    'distance_km', 'sprint_total_m', 'sprint_count', 'sprint_avg_m',
-    'max_speed_kmh', 'accelerations', 'yoyo_count',
-    'long_jump_cm', 'side_step_count', 'vertical_jump_cm',
-    'triple_jump_cm', 'step_50s_count', 'sit_ups_30s',
-    'height_cm'
-  ]
+const highIsBetter = useMemo(() => [
+  'distance_km', 'sprint_total_m', 'sprint_count', 'sprint_avg_m',
+  'max_speed_kmh', 'accelerations', 'yoyo_count',
+  'long_jump_cm', 'side_step_count', 'vertical_jump_cm',
+  'triple_jump_cm', 'step_50s_count', 'sit_ups_30s',
+  'height_cm'
+], [])
 
-  const lowIsBetter = [
-    'sprint_20m_sec', 'sprint_50m_sec', 'bmi', 'body_fat_pct'
-  ]
+const lowIsBetter = useMemo(() => [
+  'sprint_20m_sec', 'sprint_50m_sec', 'bmi', 'body_fat_pct'
+], [])
 
-  const labelMap: Record<string, string> = {
-    distance_km: '走行距離(km)',
-    sprint_total_m: 'スプリント総距離(m)',
-    sprint_count: 'スプリント回数',
-    sprint_avg_m: 'スプリント平均距離(m)',
-    max_speed_kmh: '最大速度(km/h)',
-    accelerations: '加速回数',
-    sprint_20m_sec: '20m走(秒)',
-    sprint_50m_sec: '50m走(秒)',
-    yoyo_count: 'YoYo回数',
-    long_jump_cm: '立ち幅跳び(cm)',
-    side_step_count: '反復横跳び(回)',
-    vertical_jump_cm: '垂直跳び(cm)',
-    triple_jump_cm: '三段跳び(cm)',
-    step_50s_count: 'ステップ50秒(回)',
-    sit_ups_30s: 'シットアップ30秒(回)',
-    height_cm: '身長(cm)',
-    weight_kg: '体重(kg)',
-    bmi: 'BMI',
-    body_fat_pct: '体脂肪率(%)',
-  }
+const labelMap = useMemo(() => ({
+  distance_km: '走行距離(km)',
+  sprint_total_m: 'スプリント総距離(m)',
+  sprint_count: 'スプリント回数',
+  sprint_avg_m: 'スプリント平均距離(m)',
+  max_speed_kmh: '最大速度(km/h)',
+  accelerations: '加速回数',
+  sprint_20m_sec: '20m走(秒)',
+  sprint_50m_sec: '50m走(秒)',
+  yoyo_count: 'YoYo回数',
+  long_jump_cm: '立ち幅跳び(cm)',
+  side_step_count: '反復横跳び(回)',
+  vertical_jump_cm: '垂直跳び(cm)',
+  triple_jump_cm: '三段跳び(cm)',
+  step_50s_count: 'ステップ50秒(回)',
+  sit_ups_30s: 'シットアップ30秒(回)',
+  height_cm: '身長(cm)',
+  weight_kg: '体重(kg)',
+  bmi: 'BMI',
+  body_fat_pct: '体脂肪率(%)',
+}), [])
 
   const topPerformers = useMemo(() => {
     const nameMap = Object.fromEntries(players.map(p => [p.id, p.name]))
     const keys = [...highIsBetter, ...lowIsBetter]
 
     return keys.map((key, index) => {
-      const valid = playerEvaluations.filter(e => !isNaN(parseFloat(e[key])))
+      const valid = playerEvaluations.filter(e => !isNaN(parseFloat(String(e[key] ?? ''))))
       const sorted = valid.sort((a, b) => {
-        const aVal = parseFloat(a[key])
-        const bVal = parseFloat(b[key])
+      const aVal = parseFloat(String(a[key] ?? ''))
+      const bVal = parseFloat(String(b[key] ?? ''))
+
         return highIsBetter.includes(key)
           ? bVal - aVal
           : aVal - bVal
@@ -103,12 +147,12 @@ export default function DashboardPage() {
       return {
         no: index + 1,
         key,
-        label: labelMap[key] || key,
+        label: (labelMap as Record<string, string>)[key] || key,
         value: top?.[key] ?? '-',
         name: nameMap[top?.player_id] ?? '不明'
       }
     })
-  }, [playerEvaluations, players])
+  }, [playerEvaluations, players, highIsBetter, lowIsBetter, labelMap])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -166,7 +210,7 @@ useEffect(() => {
 
     // ✅ 管理者チェック
     if (user) {
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile,} = await supabase
         .from('user_profiles')
         .select('role, name, last_selected_team_id')
         .eq('id', user.id)
@@ -195,7 +239,7 @@ useEffect(() => {
       }
 
       // ✅ コーチチェック
-      const { data: team, error: teamError } = await supabase
+      const { data: team,} = await supabase
         .from('teams')
         .select('id, name')
         .eq('coach_user_id', user.id)
@@ -561,7 +605,7 @@ return (
             <td>{player.name}</td>
             <td>{player.uniform_number}</td>
             <td>{player.position}</td>
-            <td>{calculateAge(player.birth_date)}</td>
+            <td>{player.birth_date ? calculateAge(player.birth_date) : '-'}</td>
           </tr>
         ))
       ) : (

@@ -29,8 +29,8 @@ export default function PlayerRegisterPage() {
 
 useEffect(() => {
   const checkAuth = async () => {
-    const { data: { user }, error } = await supabase.auth.getUser()
-    if (!user || error) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
       router.push('/login')
       return
     }
@@ -39,25 +39,25 @@ useEffect(() => {
     localStorage.removeItem('playerId')
 
     // ✅ まず user_profiles.role で管理者判定
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile } = await supabase
       .from('user_profiles')
       .select('role')
       .eq('id', user.id)
       .maybeSingle()
 
-    if (profile && profile.role === 'admin') {
+    if (profile?.role === 'admin') {
       setAuthorized(true)
       return
     }
 
     // ✅ 次に teams.coach_user_id でコーチ判定
-    const { data: team, error: teamError } = await supabase
+    const { data: team } = await supabase
       .from('teams')
       .select('id')
       .eq('coach_user_id', user.id)
       .maybeSingle()
 
-    if (team && !teamError) {
+    if (team) {
       setAuthorized(true)
       return
     }

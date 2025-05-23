@@ -9,68 +9,66 @@ export default function EvaluationInputPage() {
   const router = useRouter()
 
   const [role, setRole] = useState<string | null>(null)
-  const [players, setPlayers] = useState<any[]>([])
+  type Player = { id: string; name: string }
+  const [players, setPlayers] = useState<Player[]>([])
   const [playerId, setPlayerId] = useState('')
   const [recordedAt, setRecordedAt] = useState('')
-  const [formData, setFormData] = useState<any>({})
+  const [formData, setFormData] = useState<Record<string, string | number>>({})
   const [message, setMessage] = useState('')
 
-useEffect(() => {
-  const checkAuth = async () => {
-    const { data: { user }, error } = await supabase.auth.getUser()
-    if (error || !user) {
-      router.push('/dashboard')
-      return
-    }
-
-    // ✅ ① 管理者かどうか
-    const { data: profile, error: profileError } = await supabase
-      .from('user_profiles')
-      .select('role')
-      .eq('id', user.id)
-      .maybeSingle()
-
-    if (profile && profile.role === 'admin') {
-      setRole('admin')
-    } else {
-      // ✅ ② コーチかどうか（teams に登録されているか）
-      const { data: team, error: teamError } = await supabase
-        .from('teams')
-        .select('id')
-        .eq('coach_user_id', user.id)
-        .maybeSingle()
-
-      if (team && !teamError) {
-        setRole('coach')
-      } else {
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user }, error } = await supabase.auth.getUser()
+      if (error || !user) {
         router.push('/dashboard')
         return
       }
+
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (profile && profile.role === 'admin') {
+        setRole('admin')
+      } else {
+        const { data: team, error: teamError } = await supabase
+          .from('teams')
+          .select('id')
+          .eq('coach_user_id', user.id)
+          .maybeSingle()
+
+        if (team && !teamError) {
+          setRole('coach')
+        } else {
+          router.push('/dashboard')
+          return
+        }
+      }
+
+      const { data: playersData, error: playersError } = await supabase
+        .from('players')
+        .select('id, name')
+        .order('name', { ascending: true })
+
+      if (!playersError && playersData) {
+        setPlayers(playersData)
+      }
     }
 
-    // ✅ ③ プレイヤー一覧を取得
-    const { data: playersData, error: playersError } = await supabase
-      .from('players')
-      .select('id, name')
-      .order('name', { ascending: true })
+    checkAuth()
+  }, [router])
 
-    if (!playersError && playersData) {
-      setPlayers(playersData)
-    }
-  }
-
-  checkAuth()
-}, [router])
-
-  const handleChange = (field: string, value: any) => {
+  const handleChange = (field: string, value: string | number) => {
     const updated = { ...formData, [field]: value }
 
-    const height = parseFloat(field === 'height' ? value : updated.height)
-    const weight = parseFloat(field === 'weight' ? value : updated.weight)
+    const height = parseFloat(field === 'height' ? String(value) : String(updated.height))
+    const weight = parseFloat(field === 'weight' ? String(value) : String(updated.weight))
 
     if (height > 0 && weight > 0) {
       const heightM = height / 100
-      updated.bmi = (weight / (heightM * heightM)).toFixed(2)
+      updated.bmi = parseFloat((weight / (heightM * heightM)).toFixed(2))
     }
 
     setFormData(updated)

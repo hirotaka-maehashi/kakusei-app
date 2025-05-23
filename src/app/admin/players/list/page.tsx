@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import styles from './page.module.css'
 import dayjs from 'dayjs'
 import { useRouter } from 'next/navigation'
+import { useMemo } from 'react'
 
 type Player = {
   id: string
@@ -22,19 +23,18 @@ export default function PlayerListPage() {
   const [editedPlayer, setEditedPlayer] = useState<Partial<Player>>({})
   const router = useRouter()
   const [authorized, setAuthorized] = useState(false)
-  //const [role, setRole] = useState<string | null>(null)
-  const positionOrder = ['GK', 'DF', 'MF', 'FW']
-  const sortPlayers = (players: Player[]) => {
-  
-  return [...players].sort((a, b) => {
-    const posA = positionOrder.indexOf(a.position)
-    const posB = positionOrder.indexOf(b.position)
-    const aNum = a.uniform_number ?? Infinity
-    const bNum = b.uniform_number ?? Infinity
+　const positionOrder = useMemo(() => ['GK', 'DF', 'MF', 'FW'], [])
 
-    return posA !== posB ? posA - posB : aNum - bNum
-  })
-}
+  const sortPlayers = useCallback((players: Player[]) => {
+    return [...players].sort((a, b) => {
+      const posA = positionOrder.indexOf(a.position)
+      const posB = positionOrder.indexOf(b.position)
+      const aNum = a.uniform_number ?? Infinity
+      const bNum = b.uniform_number ?? Infinity
+
+      return posA !== posB ? posA - posB : aNum - bNum
+    })
+  }, [positionOrder])
 
   useEffect(() => {
     const fetchPlayers = async () => {
@@ -51,7 +51,7 @@ export default function PlayerListPage() {
     }
 
     fetchPlayers()
-  }, [])
+  }, [sortPlayers])
 
   const calculateAge = (birthDate: string) => {
     return dayjs().diff(dayjs(birthDate), 'year')
@@ -67,38 +67,34 @@ export default function PlayerListPage() {
     setEditedPlayer({})
   }
 
-const handleSave = async () => {
-  if (!editingId) return
+  const handleSave = async () => {
+    if (!editingId) return
 
-  // ログで事前確認
-  console.log('📝 保存する内容（before trim）:', editedPlayer)
+    console.log('📝 保存する内容:', editedPlayer)
 
-  // idを除外したオブジェクトを作成
-  const { ...updateData } = editedPlayer
+    const updateData = { ...editedPlayer }
 
-  console.log('📤 Supabaseに送る内容:', updateData)
+    const { data, error } = await supabase
+      .from('players')
+      .update(updateData)
+      .eq('id', editingId)
+      .select()
 
-  const { data, error } = await supabase
-    .from('players')
-    .update(updateData)
-    .eq('id', editingId)
-    .select()
+    if (error) {
+      alert('保存に失敗しました')
+      console.error('更新エラー:', error)
+      return
+    }
 
-  if (error) {
-    alert('保存に失敗しました')
-    console.error('更新エラー:', error)
-    return
+    console.log('✅ Supabase 更新成功:', data)
+
+    setPlayers(prev =>
+      prev.map(p => (p.id === editingId ? { ...p, ...updateData } as Player : p))
+    )
+
+    setEditingId(null)
+    setEditedPlayer({})
   }
-
-  console.log('✅ Supabase 更新成功:', data)
-
-  setPlayers(prev =>
-    prev.map(p => (p.id === editingId ? { ...p, ...updateData } as Player : p))
-  )
-
-  setEditingId(null)
-  setEditedPlayer({})
-}
 
   const handleDelete = async (id: string) => {
     const confirmed = window.confirm('本当に削除しますか？')
@@ -113,60 +109,52 @@ const handleSave = async () => {
     }
   }
 
-useEffect(() => {
-  const checkAccess = async () => {
-    const playerId = typeof window !== 'undefined' ? localStorage.getItem('playerId') : null
-    const { data: { user }, error } = await supabase.auth.getUser()
+  useEffect(() => {
+    const checkAccess = async () => {
+      const playerId = typeof window !== 'undefined' ? localStorage.getItem('playerId') : null
+      const { data: { user } } = await supabase.auth.getUser()
 
-    // ✅ 認証なし・playerId もなし → 弾く
-    if (!user && !playerId) {
-      router.push('/login')
-      return
+      if (!user && !playerId) {
+        router.push('/login')
+        return
+      }
+
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('role')
+        .eq('id', user?.id || '')
+        .maybeSingle()
+
+      if (profile?.role === 'admin') {
+        setAuthorized(true)
+        return
+      }
+
+      const { data: team } = await supabase
+        .from('teams')
+        .select('id')
+        .eq('coach_user_id', user?.id || '')
+        .maybeSingle()
+
+      if (team) {
+        setAuthorized(true)
+        return
+      }
+
+      if (playerId) {
+        setAuthorized(true)
+        return
+      }
+
+      router.push('/dashboard')
     }
 
-    // ✅ 管理者チェック
-    const { data: profile } = await supabase
-  .from('user_profiles')
-  .select('role')
-  .eq('id', user?.id || '')
-  .maybeSingle()
+    checkAccess()
+  }, [router])
 
-    if (profile?.role === 'admin') {
-      setAuthorized(true)
-      //setRole('admin')
-      return
-    }
-
-    // ✅ コーチチェック
-    const { data: team, error: teamError } = await supabase
-      .from('teams')
-      .select('id')
-      .eq('coach_user_id', user?.id || '')
-      .maybeSingle()
-
-    if (team && !teamError) {
-      setAuthorized(true)
-      //setRole('coach')
-      return
-    }
-
-    // ✅ 選手チェック：localStorage に playerId がある場合も許可
-    if (playerId) {
-      setAuthorized(true)
-      //setRole('player')
-      return
-    }
-
-    // ❌ どれにも該当しなければダッシュボードに戻す
-    router.push('/dashboard')
+  if (!authorized) {
+    return <p style={{ padding: '2rem' }}>アクセス確認中...</p>
   }
-
-  checkAccess()
-}, [router])
-
-if (!authorized) {
-  return <p style={{ padding: '2rem' }}>アクセス確認中...</p>
-}
 
 return (
   <main className={styles.container}>

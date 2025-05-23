@@ -1,16 +1,50 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import styles from './page.module.css'
 import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+
+type Shot = {
+  zone: string
+  number: string
+  result: string
+  xg: string
+  period: '前半' | '後半' | ''
+}
+
+type Hold = {
+  firstMin: number
+  firstSec: number
+  secondMin: number
+  secondSec: number
+}
+
+type MatchAnalysis = {
+  id: string
+  opponent: string
+  match_date: string
+  location: string
+  weather: string
+  score_for: number
+  score_against: number
+  analysis_json: {
+    shots: Shot[]
+    opponentShots: Shot[]
+    teamHold: Hold
+    opponentHold: Hold
+    periodTime?: {
+      firstHalf: number
+      secondHalf: number
+    }
+  }
+}
 
 export default function MatchDetailPage() {
   const { id } = useParams()
-  const [match, setMatch] = useState<any>(null)
+  const [match, setMatch] = useState<MatchAnalysis | null>(null)
   const router = useRouter()
-
 
   useEffect(() => {
     const fetchMatch = async () => {
@@ -32,30 +66,29 @@ export default function MatchDetailPage() {
 
   if (!match) return <main className={styles.container}>読み込み中...</main>
 
-  const { shots = [], opponentShots = [], teamHold, opponentHold, periodTime } = match.analysis_json || {}
+  const { shots = [], opponentShots = [], teamHold, opponentHold } = match.analysis_json || {}
 
-  const totalXg = shots.reduce((sum: number, s: any) => sum + parseFloat(s.xg || '0'), 0)
-  const totalXga = opponentShots.reduce((sum: number, s: any) => sum + parseFloat(s.xg || '0'), 0)
+  const totalXg = shots.reduce((sum, s) => sum + parseFloat(s.xg || '0'), 0)
+  const totalXga = opponentShots.reduce((sum, s) => sum + parseFloat(s.xg || '0'), 0)
 
-  const goals = shots.filter((s: any) => s.result === '1').length
-const goalsAgainst = opponentShots.filter((s: any) => s.result === '1').length
+  const goals = shots.filter(s => s.result === '1').length
+  const goalsAgainst = opponentShots.filter(s => s.result === '1').length
 
-const xgFirst = shots
-  .filter((s: any) => s.period === '前半')
-  .reduce((sum: number, s: any) => sum + parseFloat(s.xg || '0'), 0)
+  const xgFirst = shots
+    .filter(s => s.period === '前半')
+    .reduce((sum, s) => sum + parseFloat(s.xg || '0'), 0)
 
-const xgSecond = shots
-  .filter((s: any) => s.period === '後半')
-  .reduce((sum: number, s: any) => sum + parseFloat(s.xg || '0'), 0)
+  const xgSecond = shots
+    .filter(s => s.period === '後半')
+    .reduce((sum, s) => sum + parseFloat(s.xg || '0'), 0)
 
-const xgaFirst = opponentShots
-  .filter((s: any) => s.period === '前半')
-  .reduce((sum: number, s: any) => sum + parseFloat(s.xg || '0'), 0)
+  const xgaFirst = opponentShots
+    .filter(s => s.period === '前半')
+    .reduce((sum, s) => sum + parseFloat(s.xg || '0'), 0)
 
-const xgaSecond = opponentShots
-  .filter((s: any) => s.period === '後半')
-  .reduce((sum: number, s: any) => sum + parseFloat(s.xg || '0'), 0)
-
+  const xgaSecond = opponentShots
+    .filter(s => s.period === '後半')
+    .reduce((sum, s) => sum + parseFloat(s.xg || '0'), 0)
 
   const teamFirst = teamHold?.firstMin * 60 + teamHold?.firstSec || 0
   const teamSecond = teamHold?.secondMin * 60 + teamHold?.secondSec || 0
@@ -67,17 +100,17 @@ const xgaSecond = opponentShots
   const totalHold = totalTeam + totalOpp
 
   const scoringEfficiency = totalXg > 0 ? Math.round((goals / totalXg) * 100) : 0
-const defendingEfficiency = totalXga > 0 ? Math.round((goalsAgainst / totalXga) * 100) : 0
+  const defendingEfficiency = totalXga > 0 ? Math.round((goalsAgainst / totalXga) * 100) : 0
 
-const scoringComment =
-  scoringEfficiency >= 120 ? '決定力が非常に高い試合' :
-  scoringEfficiency >= 80 ? 'チャンスをしっかり活かした試合' :
-  '決定機を逃した場面が目立つ試合'
+  const scoringComment =
+    scoringEfficiency >= 120 ? '決定力が非常に高い試合' :
+    scoringEfficiency >= 80 ? 'チャンスをしっかり活かした試合' :
+    '決定機を逃した場面が目立つ試合'
 
-const defendingComment =
-  defendingEfficiency <= 80 ? '堅い守備を見せた' :
-  defendingEfficiency <= 120 ? '守備は妥当な内容' :
-  '相手に決定機を多く許した試合'
+  const defendingComment =
+    defendingEfficiency <= 80 ? '堅い守備を見せた' :
+    defendingEfficiency <= 120 ? '守備は妥当な内容' :
+    '相手に決定機を多く許した試合'
 
   return (
     <main className={styles.container}>
@@ -98,36 +131,45 @@ const defendingComment =
         <p><strong>合計：</strong>自 {totalHold > 0 ? Math.round((totalTeam / totalHold) * 100) : '-'}% ／ 相手 {totalHold > 0 ? Math.round((totalOpp / totalHold) * 100) : '-'}%</p>
       </div>
 
-      <div className={styles.section}>
-        <h2>シュート記録（自チーム）</h2>
-{shots.map((s: any, i: number) => (
-  <div key={i} className={styles.shotCard}>
-    <p><strong>シュート {i + 1}</strong></p>
-    <p>時間帯：{s.period}</p>
-    <p>ゾーン：{s.zone}</p>
-    <p>背番号：{s.number}</p>
-    <p>xG：{parseFloat(s.xg || '0').toFixed(2)}（ゴール期待度 {(parseFloat(s.xg || '0') * 100).toFixed(0)}%）</p>
-    <p>結果：<span className={`${styles.resultBadge} ${s.result === '1' ? styles.goal : styles.noGoal}`}>{s.result === '1' ? 'GOAL' : 'NO GOAL'}</span></p>
-  </div>
-))}
-
-      </div>
-
-      <div className={styles.section}>
-        <h2>シュート記録（相手チーム）</h2>
-{opponentShots.map((s: any, i: number) => (
-<div key={i} className={styles.shotCard}>
-  <p><strong>相手シュート {i + 1}</strong></p>
-  <p>時間帯：{s.period}</p>
-  <p>ゾーン：{s.zone}</p>
-  <p>背番号：{s.number}</p>
-  <p> xGA：{parseFloat(s.xg || '0').toFixed(2)}（失点確率 {(parseFloat(s.xg || '0') * 100).toFixed(0)}%）</p>
-  <p>結果：<span className={`${styles.resultBadge} ${s.result === '0' ? styles.save : styles.noSave}`}>{s.result === '0' ? 'SAVE' : 'NO SAVE'}</span></p>
+<div className={styles.section}>
+  <h2>シュート記録（自チーム）</h2>
+  {shots.map((s: Shot, i: number) => (
+    <div key={i} className={styles.shotCard}>
+      <p><strong>シュート {i + 1}</strong></p>
+      <p>時間帯：{s.period}</p>
+      <p>ゾーン：{s.zone}</p>
+      <p>背番号：{s.number}</p>
+      <p>xG：{parseFloat(s.xg || '0').toFixed(2)}（ゴール期待度 {(parseFloat(s.xg || '0') * 100).toFixed(0)}%）</p>
+      <p>結果：
+        <span className={`${styles.resultBadge} ${s.result === '1' ? styles.goal : styles.noGoal}`}>
+          {s.result === '1' ? 'GOAL' : 'NO GOAL'}
+        </span>
+      </p>
+    </div>
+  ))}
 </div>
 
-))}
-
-      </div>
+<div className={styles.section}>
+  <h2>シュート記録（相手チーム）</h2>
+  {opponentShots.map((s: Shot, i: number) => (
+    <div key={i} className={styles.shotCard}>
+      <p><strong>相手シュート {i + 1}</strong></p>
+      <p>時間帯：{s.period}</p>
+      <p>ゾーン：{s.zone}</p>
+      <p>背番号：{s.number}</p>
+      <p>
+        xGA：{parseFloat(s.xg || '0').toFixed(2)}
+        （失点確率 {(parseFloat(s.xg || '0') * 100).toFixed(0)}%）
+      </p>
+      <p>
+        結果：
+        <span className={`${styles.resultBadge} ${s.result === '0' ? styles.save : styles.noSave}`}>
+          {s.result === '0' ? 'SAVE' : 'NO SAVE'}
+        </span>
+      </p>
+    </div>
+  ))}
+</div>
 
 <div className={styles.section}>
   <h2>合計データ</h2>
@@ -149,6 +191,7 @@ const defendingComment =
       <span className={`${styles.analysisBadge} ${styles.avg}`}>AVG</span>
     )}
   </p>
+  <p>{scoringComment}</p> {/* ✅ コメント表示追加 */}
 
   <div className={styles.statRow} style={{ marginTop: '1rem' }}>
     <p><strong>総xGA：</strong>{totalXga.toFixed(2)}</p>
@@ -167,6 +210,16 @@ const defendingComment =
       <span className={`${styles.analysisBadge} ${styles.avg}`}>AVG</span>
     )}
   </p>
+  <p>{defendingComment}</p> {/* ✅ コメント表示追加 */}
+
+  <div className={styles.statRow} style={{ marginTop: '1rem' }}>
+    <p><strong>前半 xG：</strong>{xgFirst.toFixed(2)}</p>
+    <p><strong>後半 xG：</strong>{xgSecond.toFixed(2)}</p>
+  </div>
+  <div className={styles.statRow}>
+    <p><strong>前半 xGA：</strong>{xgaFirst.toFixed(2)}</p>
+    <p><strong>後半 xGA：</strong>{xgaSecond.toFixed(2)}</p>
+  </div>
 </div>
 
 <div className={styles.buttonRow}>

@@ -7,6 +7,14 @@ import styles from './page.module.css'
 import { Menu } from 'lucide-react'
 import { ArrowRight } from 'lucide-react'
 
+type Shot = {
+  zone: string
+  number: string
+  result: string
+  xg: string
+  period: '前半' | '後半' | ''
+}
+
 type MatchRow = {
   id: string
   match_date: string
@@ -14,8 +22,8 @@ type MatchRow = {
   score_for: number
   score_against: number
   analysis_json: {
-    shots: any[]
-    opponentShots: any[]
+    shots: Shot[]
+    opponentShots: Shot[]
   }
 }
 
@@ -30,10 +38,10 @@ export default function AnalysisHistoryPage() {
   const menuRef = useRef<HTMLDivElement>(null)
   const [adminName, setAdminName] = useState<string | null>(null)
 
-  const handleLogout = async (currentRole: string | null) => {
-    await supabase.auth.signOut()
-    router.push('/login')
-  }
+  const handleLogout = async () => {
+  await supabase.auth.signOut()
+  router.push('/login')
+}
 
   useEffect(() => {
     const fetchData = async () => {
@@ -131,35 +139,39 @@ export default function AnalysisHistoryPage() {
     fetchData()
   }, [router])
 
-  const filteredMatches = matches.filter(match => {
-    const [year, month] = match.match_date?.split('-') ?? []
-    return (
-      (selectedYear === 'all' || year === selectedYear) &&
-      (selectedMonth === 'all' || month === selectedMonth)
-    )
-  })
-
-  const totalGames = filteredMatches.length
-  const winCount = filteredMatches.filter(m => m.score_for > m.score_against).length
-  const drawCount = filteredMatches.filter(m => m.score_for === m.score_against).length
-  const loseCount = filteredMatches.filter(m => m.score_for < m.score_against).length
-  const winRate = totalGames > 0 ? Math.round((winCount / totalGames) * 100) : 0
-
-  const totalScoreFor = filteredMatches.reduce((sum, m) => sum + (m.score_for || 0), 0)
-  const totalScoreAgainst = filteredMatches.reduce((sum, m) => sum + (m.score_against || 0), 0)
-  const avgScoreFor = totalGames > 0 ? (totalScoreFor / totalGames).toFixed(2) : '0.00'
-  const avgScoreAgainst = totalGames > 0 ? (totalScoreAgainst / totalGames).toFixed(2) : '0.00'
-
-  const totalXg = filteredMatches.reduce((sum, m) =>
-    sum + (m.analysis_json?.shots?.reduce((s: number, x: any) => s + parseFloat(x.xg || '0'), 0) || 0), 0
+ // 年月で絞り込み
+const filteredMatches = matches.filter(({ match_date }) => {
+  const [year, month] = match_date.split('-')
+  return (
+    (selectedYear === 'all' || year === selectedYear) &&
+    (selectedMonth === 'all' || month === selectedMonth)
   )
-  const totalXga = filteredMatches.reduce((sum, m) =>
-    sum + (m.analysis_json?.opponentShots?.reduce((s: number, x: any) => s + parseFloat(x.xg || '0'), 0) || 0), 0
-  )
+})
 
-  const avgXg = totalGames > 0 ? (totalXg / totalGames).toFixed(2) : '0.00'
-  const avgXga = totalGames > 0 ? (totalXga / totalGames).toFixed(2) : '0.00'
+// 試合数と勝敗集計
+const totalGames = filteredMatches.length
+const winCount = filteredMatches.filter(m => m.score_for > m.score_against).length
+const drawCount = filteredMatches.filter(m => m.score_for === m.score_against).length
+const loseCount = filteredMatches.filter(m => m.score_for < m.score_against).length
+const winRate = totalGames > 0 ? Math.round((winCount / totalGames) * 100) : 0
 
+// 得点・被得点平均
+const totalScoreFor = filteredMatches.reduce((sum, m) => sum + m.score_for, 0)
+const totalScoreAgainst = filteredMatches.reduce((sum, m) => sum + m.score_against, 0)
+const avgScoreFor = totalGames > 0 ? (totalScoreFor / totalGames).toFixed(2) : '0.00'
+const avgScoreAgainst = totalGames > 0 ? (totalScoreAgainst / totalGames).toFixed(2) : '0.00'
+
+// xG/xGA
+const totalXg = filteredMatches.reduce(
+  (sum, m) => sum + m.analysis_json.shots.reduce((s, x) => s + parseFloat(x.xg), 0),
+  0
+)
+const totalXga = filteredMatches.reduce(
+  (sum, m) => sum + m.analysis_json.opponentShots.reduce((s, x) => s + parseFloat(x.xg), 0),
+  0
+)
+const avgXg = totalGames > 0 ? (totalXg / totalGames).toFixed(2) : '0.00'
+const avgXga = totalGames > 0 ? (totalXga / totalGames).toFixed(2) : '0.00'
 
 return (
   <>
@@ -170,6 +182,9 @@ return (
   {adminName || teamName || 'チーム名未設定'}
 </h1>
 
+<p className={styles.roleLabel}>
+  ログイン種別: {role === 'admin' ? '管理者' : role === 'coach' ? 'コーチ' : role === 'player' ? '選手' : '不明'}
+</p>
 
   <div className={styles.headerMenu}>
     <button onClick={() => setMenuOpen(!menuOpen)} className={styles.menuButton}>
@@ -183,7 +198,7 @@ return (
     <button onClick={() => router.push('/evaluation/input')}>選手データ入力</button>
     <button onClick={() => router.push('/evaluation/view')}>選手データ表示</button>
     <button onClick={() => { setMenuOpen(false); router.push('/analysis/input') }}>試合分析入力</button>
-   <button onClick={() => { setMenuOpen(false); handleLogout(role) }}>ログアウト</button>
+   <button onClick={() => { setMenuOpen(false); handleLogout() }}>ログアウト</button>
       </div>
     )}
   </div>
@@ -245,8 +260,8 @@ return (
 
 
 {filteredMatches.map(match => {
-  const totalXg = match.analysis_json?.shots?.reduce((sum: number, s: any) => sum + parseFloat(s.xg || '0'), 0) || 0
-  const totalXga = match.analysis_json?.opponentShots?.reduce((sum: number, s: any) => sum + parseFloat(s.xg || '0'), 0) || 0
+  const totalXg = match.analysis_json?.shots?.reduce((sum: number, s: Shot) => sum + parseFloat(s.xg || '0'), 0) || 0
+  const totalXga = match.analysis_json?.opponentShots?.reduce((sum: number, s: Shot) => sum + parseFloat(s.xg || '0'), 0) || 0
 
   const result =
     match.score_for > match.score_against ? 'WIN'

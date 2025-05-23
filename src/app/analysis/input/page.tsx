@@ -53,11 +53,9 @@ export default function AnalysisPage() {
   setShots(updated)
 }
 
-  const [blankTime, setBlankTime] = useState({ first: 0, second: 0, total: 0 })
-
-  const [shots, setShots] = useState<ShotRecord[]>([
-     { zone: '', number: '', result: '', xg: '', period: '' }
-  ])
+const [shots, setShots] = useState<ShotRecord[]>([
+  { zone: '', number: '', result: '', xg: '', period: '' }
+])
 
   const [periodTime, setPeriodTime] = useState({
   firstMin: 0, firstSec: 0,
@@ -75,7 +73,7 @@ const [opponentHold, setOpponentHold] = useState({
 })
 
 const [opponentShots, setOpponentShots] = useState<ShotRecord[]>([
- { zone: '', number: '', result: '', xg: '', period: '' }
+  { zone: '', number: '', result: '', xg: '', period: '' }
 ])
 
 const handleLogout = async (currentRole: string | null) => {
@@ -132,9 +130,10 @@ useEffect(() => {
     fetchTeamName()
   }, [router])
 
-  const totalXg = shots.reduce((sum, shot) => sum + (parseFloat(shot.xg) || 0), 0)
+const totalXg = shots.reduce((sum, shot) => sum + (parseFloat(shot.xg) || 0), 0)
 const goalsTotal = shots.filter(s => s.result === '1').length
 const efficiency = totalXg > 0 ? Math.round((goalsTotal / totalXg) * 100) : 0
+console.log('得点効率（仮）：', efficiency)
 
 useEffect(() => {
   const periodFirst = periodTime.firstMin * 60 + periodTime.firstSec
@@ -149,21 +148,26 @@ useEffect(() => {
   const blankFirst = Math.max(0, periodFirst - (teamFirst + oppFirst))
   const blankSecond = Math.max(0, periodSecond - (teamSecond + oppSecond))
 
-  setBlankTime({
-    first: blankFirst,
-    second: blankSecond,
-    total: blankFirst + blankSecond
-  })
-}, [periodTime, teamHold, opponentHold])
+  // ✅ ここにログ出力を追加
+  console.log('空白（前半）:', blankFirst)
+  console.log('空白（後半）:', blankSecond)
 
+}, [periodTime, teamHold, opponentHold])
 
 const updateShot = (index: number, key: keyof ShotRecord, value: string) => {
   const updated = [...shots]
-  updated[index][key] = value as any
+
+  if (key === 'period') {
+    updated[index].period = value as '前半' | '後半' | ''
+  } else {
+    updated[index][key] = value
+  }
+
   if (key === 'zone') {
     const xg = xgMap[value as keyof typeof xgMap] || ''
     updated[index].xg = xg.toString()
   }
+
   setShots(updated)
 }
 
@@ -173,7 +177,12 @@ const addShot = () => {
 
 const updateOpponentShot = (index: number, key: keyof ShotRecord, value: string) => {
   const updated = [...opponentShots]
-  updated[index][key] = value as any
+
+  if (key === 'period') {
+    updated[index].period = value as '前半' | '後半' | ''
+  } else {
+    updated[index][key] = value
+  }
 
   if (key === 'zone') {
     const xg = xgMap[value as keyof typeof xgMap] || ''
@@ -182,7 +191,6 @@ const updateOpponentShot = (index: number, key: keyof ShotRecord, value: string)
 
   setOpponentShots(updated)
 }
-
 
 const addOpponentShot = () => {
   setOpponentShots([...opponentShots, { zone: '', number: '', result: '', xg: '', period: '' }])
@@ -270,7 +278,7 @@ useEffect(() => {
     }
 
     // ✅ まず user_profiles を確認（admin 判定）
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile,} = await supabase
       .from('user_profiles')
       .select('role')
       .eq('id', user.id)
