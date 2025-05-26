@@ -21,6 +21,8 @@ export default function EvaluationViewPage() {
   const [categoryValue, setCategoryValue] = useState('')
   const [selectedGender, setSelectedGender] = useState('')
   const router = useRouter()
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editBuffer, setEditBuffer] = useState<Record<string, string>>({})
 
 useEffect(() => {
   const playerId = typeof window !== 'undefined' ? localStorage.getItem('playerId') : null
@@ -97,56 +99,57 @@ data?.forEach((row: { key: string; value: number }) => {
   }
 }, [categoryValue, selectedGender])
 
-  useEffect(() => {
-    const fetchEvaluations = async () => {
-      if (!selectedPlayerId || selectedPlayerId.length < 10) return
+  const fetchEvaluations = async () => {
+  if (!selectedPlayerId || selectedPlayerId.length < 10) return
 
-      const { data, error } = await supabase
-        .from('player_evaluations')
-        .select('*')
-        .eq('player_id', selectedPlayerId)
-        .order('recorded_at', { ascending: false })
+  const { data, error } = await supabase
+    .from('player_evaluations')
+    .select('*')
+    .eq('player_id', selectedPlayerId)
+    .order('recorded_at', { ascending: false })
 
-      if (error) {
-        console.error('❌ データ取得エラー:', error)
-        return
-      }
+  if (error) {
+    console.error('❌ データ取得エラー:', error)
+    return
+  }
 
-      if (data && data.length > 0) {
-        setEvaluations(data)
-        setLatestData(data[0])
+  if (data && data.length > 0) {
+    setEvaluations(data)
+    setLatestData(data[0])
 
-        const keys = [
-          // フィジカル
-          'distance_km', 'sprint_total_m', 'sprint_count', 'sprint_avg_m',
-          'max_speed_kmh', 'accelerations', 'sprint_20m_sec', 'sprint_50m_sec',
-          'yoyo_count', 'long_jump_cm', 'side_step_count', 'vertical_jump_cm',
-          'triple_jump_cm', 'step_50s_count', 'sit_ups_30s',
+    const keys = [
+      // フィジカル
+      'distance_km', 'sprint_total_m', 'sprint_count', 'sprint_avg_m',
+      'max_speed_kmh', 'accelerations', 'sprint_20m_sec', 'sprint_50m_sec',
+      'yoyo_count', 'long_jump_cm', 'side_step_count', 'vertical_jump_cm',
+      'triple_jump_cm', 'step_50s_count', 'sit_ups_30s',
 
-          // メディカル
-          'pelvis_posture', 'leg_shape', 'foot_arch',
-          'fingertip_floor_cm', 'heel_buttock_cm', 'thomas_test', 'slr_deg',
-          'squat_form', 'shin_pain', 'heel_pain', 'pain_custom',
+      // メディカル
+      'pelvis_posture', 'leg_shape', 'foot_arch',
+      'fingertip_floor_cm', 'heel_buttock_cm', 'thomas_test', 'slr_deg',
+      'squat_form', 'shin_pain', 'heel_pain', 'pain_custom',
 
-          // 体格
-          'height_cm', 'weight_kg', 'bmi', 'body_fat_pct'
-        ]
+      // 体格
+      'height_cm', 'weight_kg', 'bmi', 'body_fat_pct'
+    ]
 
-        const avg = Object.fromEntries(
-          keys.map(k => {
-            const vals = data.map(d => parseFloat(d[k])).filter(v => !isNaN(v))
-            const total = vals.reduce((sum, v) => sum + v, 0)
-            return [k, vals.length ? (total / vals.length).toFixed(1) : '-']
-          })
-        )
-        setAvgData(avg)
-      } else {
-        setEvaluations([])
-        setAvgData({})
-      }
-    }
-    fetchEvaluations()
-  }, [selectedPlayerId])
+    const avg = Object.fromEntries(
+      keys.map(k => {
+        const vals = data.map(d => parseFloat(d[k])).filter(v => !isNaN(v))
+        const total = vals.reduce((sum, v) => sum + v, 0)
+        return [k, vals.length ? (total / vals.length).toFixed(1) : '-']
+      })
+    )
+    setAvgData(avg)
+  } else {
+    setEvaluations([])
+    setAvgData({})
+  }
+}
+
+useEffect(() => {
+  fetchEvaluations()
+}, [selectedPlayerId])
 
   const labelMap: Record<string, string> = {
     // フィジカル
@@ -186,29 +189,40 @@ data?.forEach((row: { key: string; value: number }) => {
     body_fat_pct: '体脂肪率(%)'
   }
 
-  const sections = [
-    {
-      title: 'フィジカル',
-      keys: [
-        'distance_km', 'sprint_total_m', 'sprint_count', 'sprint_avg_m',
-        'max_speed_kmh', 'accelerations', 'sprint_20m_sec', 'sprint_50m_sec',
-        'yoyo_count', 'long_jump_cm', 'side_step_count', 'vertical_jump_cm',
-        'triple_jump_cm', 'step_50s_count', 'sit_ups_30s'
-      ]
-    },
-    {
-      title: 'メディカル',
-      keys: [
-        'pelvis_posture', 'leg_shape', 'foot_arch',
-        'fingertip_floor_cm', 'heel_buttock_cm', 'thomas_test', 'slr_deg',
-        'squat_form', 'shin_pain', 'heel_pain', 'pain_custom'
-      ]
-    },
-    {
-      title: '体格',
-      keys: ['height_cm', 'weight_kg', 'bmi', 'body_fat_pct']
-    }
-  ]
+const sections = [
+  {
+    title: '試合分析データ',
+    keys: [
+      'distance_km',
+      'sprint_total_m',
+      'sprint_count',
+      'sprint_avg_m',
+      'max_speed_kmh',
+      'accelerations'
+    ]
+  },
+  {
+    title: 'フィジカル',
+    keys: [
+      'sprint_20m_sec', 'sprint_50m_sec', 'yoyo_count',
+      'long_jump_cm', 'side_step_count', 'vertical_jump_cm',
+      'triple_jump_cm', 'step_50s_count', 'sit_ups_30s'
+    ]
+  },
+  {
+    title: 'メディカル',
+    keys: [
+      'pelvis_posture', 'leg_shape', 'foot_arch',
+      'fingertip_floor_cm', 'heel_buttock_cm', 'thomas_test', 'slr_deg',
+      'squat_form', 'shin_pain', 'heel_pain', 'pain_custom'
+    ]
+  },
+  {
+    title: '体格',
+    keys: ['height_cm', 'weight_kg', 'bmi', 'body_fat_pct']
+  }
+]
+
 
 const diffThresholds: Record<string, Record<string, Record<string, { good: number; try: number }>>> = {
   u12: {
@@ -433,6 +447,50 @@ const diffThresholds: Record<string, Record<string, Record<string, { good: numbe
   },
 };
 
+const handleEdit = (record: EvaluationRecord) => {
+  setEditingId(record.id.toString())
+  const buffer: Record<string, string> = {}
+  Object.keys(labelMap).forEach(key => {
+    buffer[key] = record[key]?.toString() ?? ''
+  })
+  setEditBuffer(buffer)
+}
+
+const handleSave = async (id: string) => {
+  const { error } = await supabase
+    .from('player_evaluations')
+    .update(editBuffer)
+    .eq('id', id)
+
+  if (error) {
+    alert('❌ 保存に失敗しました')
+    return
+  }
+
+  alert('✅ 保存しました')
+  setEditingId(null)
+  setEditBuffer({})
+  await fetchEvaluations()
+}
+
+const handleDelete = async (id: string) => {
+  const ok = confirm('本当に削除しますか？')
+  if (!ok) return
+
+  const { error } = await supabase
+    .from('player_evaluations')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    alert('❌ 削除に失敗しました')
+    return
+  }
+
+  alert('✅ 削除しました')
+  await fetchEvaluations()
+}
+
 function getEvaluationLabel(
   diff: number,
   thresholds: { good: number; try: number }
@@ -636,16 +694,65 @@ return (
                 </tr>
               </thead>
               <tbody>
-                {evaluations.map((record) => (
-                  <tr key={`${record.recorded_at}-${record.id}`}>
-                    <td>{record.recorded_at}</td>
-                    {Object.keys(labelMap).map(key => (
-                      <td key={`cell-${record.id}-${key}`}>
-                        {record[key] ?? '-'}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
+{evaluations.map((record) => (
+  <tr key={`${record.recorded_at}-${record.id}`}>
+    <td>{record.recorded_at}</td>
+    {Object.keys(labelMap).map((key) => (
+      <td key={`cell-${record.id}-${key}`}>
+        {editingId === record.id ? (
+          <input
+            type="text"
+            value={editBuffer[key] ?? ''}
+            onChange={(e) =>
+              setEditBuffer((prev) => ({
+                ...prev,
+                [key]: e.target.value,
+              }))
+            }
+            style={{ width: '60px' }}
+          />
+        ) : (
+          record[key] ?? '-'
+        )}
+      </td>
+    ))}
+
+<td className={styles.buttonGroup}>
+  {editingId === record.id.toString() ? (
+    <>
+      <button
+        onClick={() => handleSave(record.id.toString())}
+        className={styles.saveButton}
+      >
+        保存
+      </button>
+      <button
+        onClick={() => setEditingId(null)}
+        className={styles.cancelButton}
+      >
+        キャンセル
+      </button>
+    </>
+  ) : (
+    <>
+      <button
+        onClick={() => handleEdit(record)}
+        className={styles.editButton}
+      >
+        編集
+      </button>
+      <button
+        onClick={() => handleDelete(record.id.toString())}
+        className={styles.deleteButton}
+      >
+        削除
+      </button>
+    </>
+  )}
+</td>
+  </tr>
+))}
+
               </tbody>
             </table>
           </div>

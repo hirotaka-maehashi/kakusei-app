@@ -5,16 +5,48 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import styles from './page.module.css'
 
+type EvaluationForm = {
+  distance_km?: number
+  sprint_total_m?: number
+  sprint_count?: number
+  sprint_avg_m?: number
+  max_speed_kmh?: number
+  accelerations?: number
+  sprint_20m_sec?: number
+  sprint_50m_sec?: number
+  yoyo_count?: number
+  long_jump_cm?: number
+  side_step_count?: number
+  vertical_jump_cm?: number
+  triple_jump_cm?: number
+  step_50s_count?: number
+  sit_ups_30s?: number
+  pelvis_posture?: string
+  leg_shape?: string
+  foot_arch?: string
+  fingertip_floor_cm?: number
+  heel_buttock_cm?: number
+  thomas_test?: string
+  slr_deg?: number
+  shin_pain?: string
+  heel_pain?: string
+  pain_custom?: string
+  height_cm?: number
+  weight_kg?: number
+  bmi?: number
+  body_fat_pct?: number
+}
+
 export default function EvaluationInputPage() {
   const router = useRouter()
-
   const [role, setRole] = useState<string | null>(null)
   type Player = { id: string; name: string }
   const [players, setPlayers] = useState<Player[]>([])
   const [playerId, setPlayerId] = useState('')
   const [recordedAt, setRecordedAt] = useState('')
-  const [formData, setFormData] = useState<Record<string, string | number>>({})
   const [message, setMessage] = useState('')
+  const [formData, setFormData] = useState<EvaluationForm>({})
+
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -58,44 +90,53 @@ export default function EvaluationInputPage() {
     }
 
     checkAuth()
-  }, [router])
+    console.log('🧪 role (for lint):', role)
+  }, [router, role])
 
   const handleChange = (field: string, value: string | number) => {
     const updated = { ...formData, [field]: value }
 
-    const height = parseFloat(field === 'height' ? String(value) : String(updated.height))
-    const weight = parseFloat(field === 'weight' ? String(value) : String(updated.weight))
+const height = parseFloat(field === 'height_cm' ? String(value) : String(updated.height_cm))
+const weight = parseFloat(field === 'weight_kg' ? String(value) : String(updated.weight_kg))
 
-    if (height > 0 && weight > 0) {
-      const heightM = height / 100
-      updated.bmi = parseFloat((weight / (heightM * heightM)).toFixed(2))
-    }
+if (height > 0 && weight > 0) {
+  const heightM = height / 100
+  updated.bmi = parseFloat((weight / (heightM * heightM)).toFixed(2))
+}
 
     setFormData(updated)
   }
 
-  const handleSave = async () => {
-    if (!playerId || !recordedAt) {
-      setMessage('選手と日付は必須です')
-      return
-    }
-
-    const { error } = await supabase.from('player_evaluations').insert({
-      player_id: playerId,
-      recorded_at: recordedAt,
-      ...formData
-    })
-
-    if (error) {
-      console.error(error)
-      setMessage('保存に失敗しました')
-    } else {
-      setMessage('✅ 登録しました')
-      setFormData({})
-    }
+const handleSave = async () => {
+  if (!playerId || !recordedAt) {
+    setMessage('選手と日付は必須です')
+    return
   }
 
-  if (!role) return <p className={styles.message}>確認中...</p>
+  // ✅ Supabaseに渡すpayloadは型を保証
+  const payload: EvaluationForm & {
+    player_id: string
+    recorded_at: string
+  } = {
+    player_id: playerId,
+    recorded_at: recordedAt,
+    ...formData,
+  }
+
+  // ✅ insertは必ず配列で渡す
+  const { error } = await supabase
+    .from('player_evaluations')
+    .insert([payload])
+
+  if (error) {
+    console.error('❌ 保存エラー:', error)
+    console.log('🧪 送信内容:', payload)
+    setMessage('保存に失敗しました')
+  } else {
+    setMessage('✅ 登録しました')
+    setFormData({})
+  }
+}
 
   return (
     <main className={styles.container}>
@@ -246,10 +287,17 @@ export default function EvaluationInputPage() {
       <div className={styles.section}>
         <h2>体格</h2>
 <label>身長(cm)</label>
-<input type="number" onChange={e => handleChange('height', e.target.value)} />
+<input
+  type="number"
+  onChange={e => handleChange('height_cm', parseFloat(e.target.value))}
+/>
 
 <label>体重(kg)</label>
-<input type="number" onChange={e => handleChange('weight', e.target.value)} />
+<input
+  type="number"
+  onChange={e => handleChange('weight_kg', parseFloat(e.target.value))}
+/>
+
 
 <label>BMI</label>
 <input type="number" value={formData.bmi || ''} readOnly />

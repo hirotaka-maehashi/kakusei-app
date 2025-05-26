@@ -598,22 +598,42 @@ return (
         <th>年齢</th>
       </tr>
     </thead>
-    <tbody>
-      {players.length > 0 ? (
-        players.map(player => (
-          <tr key={player.id}>
-            <td>{player.name}</td>
-            <td>{player.uniform_number}</td>
-            <td>{player.position}</td>
-            <td>{player.birth_date ? calculateAge(player.birth_date) : '-'}</td>
-          </tr>
-        ))
-      ) : (
-        <tr>
-          <td colSpan={4}>選手データがまだありません。</td>
+<tbody>
+  {players.length > 0 ? (
+    [...players]
+      .sort((a, b) => {
+       const positionOrder: Record<'GK' | 'DF' | 'MF' | 'FW', number> = {
+  GK: 1,
+  DF: 2,
+  MF: 3,
+  FW: 4
+}
+
+const posA = positionOrder[a.position as 'GK' | 'DF' | 'MF' | 'FW'] ?? 99
+const posB = positionOrder[b.position as 'GK' | 'DF' | 'MF' | 'FW'] ?? 99
+
+        if (posA !== posB) return posA - posB
+
+        const numA = a.uniform_number ?? 999
+        const numB = b.uniform_number ?? 999
+
+        return numA - numB
+      })
+      .map(player => (
+        <tr key={player.id}>
+          <td>{player.name}</td>
+          <td>{player.uniform_number}</td>
+          <td>{player.position}</td>
+          <td>{player.birth_date ? calculateAge(player.birth_date) : '-'}</td>
         </tr>
-      )}
-    </tbody>
+      ))
+  ) : (
+    <tr>
+      <td colSpan={4}>選手データがまだありません。</td>
+    </tr>
+  )}
+</tbody>
+
   </table>
 </section>
 </main>

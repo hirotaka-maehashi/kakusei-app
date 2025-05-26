@@ -18,6 +18,7 @@ const xgMap = {
   '9': 0.03,
   '10': 0.02,
   '11': 0.02,
+  '12': 0.01,
 }
 
 type ShotRecord = {
@@ -26,6 +27,7 @@ type ShotRecord = {
   result: string
   xg: string
   period: '前半' | '後半' | ''
+  minute: string // ✅ ここを追加
 }
 
 export default function AnalysisPage() {
@@ -54,7 +56,7 @@ export default function AnalysisPage() {
 }
 
 const [shots, setShots] = useState<ShotRecord[]>([
-  { zone: '', number: '', result: '', xg: '', period: '' }
+  { zone: '', number: '', result: '', xg: '', period: '', minute: '' }
 ])
 
   const [periodTime, setPeriodTime] = useState({
@@ -73,7 +75,7 @@ const [opponentHold, setOpponentHold] = useState({
 })
 
 const [opponentShots, setOpponentShots] = useState<ShotRecord[]>([
-  { zone: '', number: '', result: '', xg: '', period: '' }
+  { zone: '', number: '', result: '', xg: '', period: '', minute: '' }
 ])
 
 const handleLogout = async (currentRole: string | null) => {
@@ -172,7 +174,10 @@ const updateShot = (index: number, key: keyof ShotRecord, value: string) => {
 }
 
 const addShot = () => {
-  setShots([...shots, { zone: '', number: '', result: '', xg: '', period: '' }])
+  setShots([
+    ...shots,
+    { zone: '', number: '', result: '', xg: '', period: '', minute: '' }
+  ])
 }
 
 const updateOpponentShot = (index: number, key: keyof ShotRecord, value: string) => {
@@ -193,7 +198,10 @@ const updateOpponentShot = (index: number, key: keyof ShotRecord, value: string)
 }
 
 const addOpponentShot = () => {
-  setOpponentShots([...opponentShots, { zone: '', number: '', result: '', xg: '', period: '' }])
+  setOpponentShots([
+    ...opponentShots,
+    { zone: '', number: '', result: '', xg: '', period: '', minute: '' }
+  ])
 }
 
 const removeOpponentShot = (index: number) => {
@@ -472,15 +480,23 @@ return (
   <option value="後半">後半</option>
 </select>
 
+<label>時間（分）:</label>
+<input
+  type="number"
+  placeholder="例: 23"
+  value={shot.minute}
+  onChange={e => updateShot(i, 'minute', e.target.value)}
+/>
+
 <label>ゾーン:</label>
 <select
   value={shot.zone}
   onChange={e => updateShot(i, 'zone', e.target.value)}
 >
   <option value="">選択</option>
-  {[...Array(11)].map((_, i) => (
-    <option key={i + 1} value={(i + 1).toString()}>{i + 1}</option>
-  ))}
+{[...Array(12)].map((_, i) => (
+  <option key={i + 1} value={(i + 1).toString()}>{i + 1}</option>
+))}
 </select>
 
       <label>背番号:</label>
@@ -530,13 +546,21 @@ return (
   <option value="後半">後半</option>
 </select>
 
+<label>時間（分）:</label>
+<input
+  type="number"
+  placeholder="例: 45"
+  value={shot.minute}
+  onChange={e => updateOpponentShot(i, 'minute', e.target.value)}
+/>
+
 <label>ゾーン:</label>
 <select
   value={shot.zone || ''}
   onChange={e => updateOpponentShot(i, 'zone', e.target.value)}
 >
   <option value="">選択</option>
-  {[...Array(11)].map((_, i) => (
+  {[...Array(12)].map((_, i) => (
     <option key={i + 1} value={(i + 1).toString()}>{i + 1}</option>
   ))}
 </select>
@@ -614,6 +638,54 @@ const defenseEfficiency = totalXga > 0
   ? Math.round((goalsAgainstTotal / totalXga) * 100)
   : 0
 
+  const xgByTimeZone: Record<string, number> = {
+  '0-15': 0,
+  '16-30': 0,
+  '31-45': 0,
+  '46-60': 0,
+  '61-75': 0,
+  '76-90': 0,
+  '未入力': 0
+}
+
+shots.forEach((s) => {
+  const min = parseInt(s.minute || '')
+  const xgVal = parseFloat(s.xg || '0')
+
+  if (isNaN(min)) {
+    xgByTimeZone['未入力'] += xgVal
+  } else if (min <= 15) {
+    xgByTimeZone['0-15'] += xgVal
+  } else if (min <= 30) {
+    xgByTimeZone['16-30'] += xgVal
+  } else if (min <= 45) {
+    xgByTimeZone['31-45'] += xgVal
+  } else if (min <= 60) {
+    xgByTimeZone['46-60'] += xgVal
+  } else if (min <= 75) {
+    xgByTimeZone['61-75'] += xgVal
+  } else {
+    xgByTimeZone['76-90'] += xgVal
+  }
+})
+
+const xgaByTimeZone: Record<string, number> = {
+  '0-15': 0, '16-30': 0, '31-45': 0,
+  '46-60': 0, '61-75': 0, '76-90': 0, '未入力': 0
+}
+
+opponentShots.forEach((s) => {
+  const min = parseInt(s.minute || '')
+  const val = parseFloat(s.xg || '0')
+  if (isNaN(min)) xgaByTimeZone['未入力'] += val
+  else if (min <= 15) xgaByTimeZone['0-15'] += val
+  else if (min <= 30) xgaByTimeZone['16-30'] += val
+  else if (min <= 45) xgaByTimeZone['31-45'] += val
+  else if (min <= 60) xgaByTimeZone['46-60'] += val
+  else if (min <= 75) xgaByTimeZone['61-75'] += val
+  else xgaByTimeZone['76-90'] += val
+})
+
     return (
       <>
         <h3>【前半】</h3>
@@ -642,7 +714,6 @@ const defenseEfficiency = totalXga > 0
 <p>xG（期待値）：{totalXg.toFixed(2)}</p>
 <p>得点数：{goalsTotal}</p>
 <p>得点効率：{efficiency}%</p>
-
 <p>
   試合評価：{
     efficiency >= 120
@@ -652,6 +723,15 @@ const defenseEfficiency = totalXga > 0
       : '決定機を活かしきれなかった試合'
   }
 </p>
+<h4 style={{ marginTop: '1rem' }}>【時間帯別 xG】</h4>
+<ul>
+  {Object.entries(xgByTimeZone).map(([zone, value]) => (
+    <li key={zone}>
+      {zone} 分：{value.toFixed(2)}
+    </li>
+  ))}
+</ul>
+
 
 <h4 style={{ marginTop: '1rem' }}>【シュートごとの分析】</h4>
 {shots.map((s, i) => (
@@ -673,9 +753,9 @@ const defenseEfficiency = totalXga > 0
     <p>
       期待に応えたか？：
       {s.result === '1'
-        ? <span style={{ color: 'green' }}>○（決定機を決めた）</span>
+        ? <span style={{ color: 'green' }}>○（GOAL）</span>
         : s.result === '0'
-          ? <span style={{ color: 'red' }}>×（逃した）</span>
+          ? <span style={{ color: 'red' }}>×（No GOAL）</span>
           : '評価待ち'}
     </p>
   </div>
@@ -686,7 +766,6 @@ const defenseEfficiency = totalXga > 0
 <p>xG（被xG）：{totalXga.toFixed(2)}</p>
 <p>失点数：{goalsAgainstTotal}</p>
 <p>守備効率（失点 ÷ 被xG）：{defenseEfficiency}%</p>
-
 <p>
   守備評価：{
     defenseEfficiency <= 80
@@ -696,6 +775,15 @@ const defenseEfficiency = totalXga > 0
       : '相手に決定機を与えすぎた'
   }
 </p>
+<h4 style={{ marginTop: '1rem' }}>【相手時間帯別 xGA】</h4>
+<ul>
+  {Object.entries(xgaByTimeZone).map(([zone, value]) => (
+    <li key={zone}>
+      {zone} 分：{value.toFixed(2)}
+    </li>
+  ))}
+</ul>
+
 
 <h4 style={{ marginTop: '1rem' }}>【相手シュートごとの守備対応】</h4>
 {opponentShots.map((s, i) => (
@@ -717,7 +805,7 @@ const defenseEfficiency = totalXga > 0
     <p>
       守備貢献度：{
         s.result === '0'
-          ? <span style={{ color: 'green' }}>✅ 決定機を防いだ</span>
+          ? <span style={{ color: 'green' }}>✅ 防いだ</span>
           : s.result === '1'
             ? <span style={{ color: 'red' }}>❌ 失点を許した</span>
             : '評価待ち'

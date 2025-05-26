@@ -184,6 +184,56 @@
   background-color: #005fa3;
 }
 
+.buttonGroup {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.editButton,
+.saveButton,
+.cancelButton,
+.deleteButton {
+  padding: 4px 8px;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editButton {
+  background-color: #e0f0ff;
+  color: #0070f3;
+}
+
+.editButton:hover {
+  background-color: #c7e7ff;
+}
+
+.saveButton {
+  background-color: #d4f7dc;
+  color: #208e3b;
+}
+
+.saveButton:hover {
+  background-color: #b8f0c4;
+}
+
+.cancelButton {
+  background-color: #f5f5f5;
+  color: #555;
+}
+
+.cancelButton:hover {
+  background-color: #e0e0e0;
+}
+
+.deleteButton {
+  background-color: #ffe3e3;
+  color: #d93025;
+}
+
 
 
 
