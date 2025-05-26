@@ -106,7 +106,9 @@ export default function MatchDetailPage() {
   const totalHold = totalTeam + totalOpp
 
   const scoringEfficiency = totalXg > 0 ? Math.round((goals / totalXg) * 100) : 0
-  const defendingEfficiency = totalXga > 0 ? Math.round((goalsAgainst / totalXga) * 100) : 0
+  const defendingEfficiency = opponentShots.length > 0
+  ? Math.round((goalsAgainst / opponentShots.length) * 100)
+  : 0
 
   const scoringComment =
     scoringEfficiency >= 120 ? '決定力が非常に高い試合' :
@@ -236,6 +238,8 @@ const handleEditStart = (index: number, shot: Shot) => {
 const handleSaveEdit = async (index: number) => {
   if (!editShot) return
 
+  console.log('✅ 保存直前の zone:', editShot.zone)
+
   // 入力チェック（undefined や 空文字 対策）
   const raw = parseInt(editShot.minute ?? '')
   if (isNaN(raw)) {
@@ -249,13 +253,13 @@ const handleSaveEdit = async (index: number) => {
   // データを構造ごと上書き（minuteを明示）
   const updatedShots = [...shots]
   updatedShots[index] = {
-    zone: editShot.zone,
-    number: editShot.number,
-    result: editShot.result,
-    xg: editShot.xg,
-    period: editShot.period,
-    minute: String(adjustedMinute), // ← 必ず文字列に変換して保存
-  }
+  zone: String(editShot.zone ?? ''), // ✅ ここを明示的に文字列にして確実に保存
+  number: editShot.number ?? '',
+  result: editShot.result ?? '',
+  xg: editShot.xg ?? '',
+  period: editShot.period ?? '',
+  minute: String(adjustedMinute),
+}
 
   console.log('💾 保存内容（最終）:', updatedShots[index])
 
