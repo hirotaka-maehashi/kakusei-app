@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../../../lib/supabase'
 import styles from './page.module.css'
@@ -9,6 +9,21 @@ export default function TeamRegisterPage() {
   const [teamName, setTeamName] = useState('')
   const [message, setMessage] = useState('')
   const router = useRouter()
+
+  // ✅ 認証チェック（ページ表示直後に実行）
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: sessionData } = await supabase.auth.getSession()
+      const session = sessionData.session
+
+      if (!session || !session.user) {
+        console.warn('❌ 未ログイン → /team/login に遷移')
+        router.push('/team/login')
+      }
+    }
+
+    checkSession()
+  }, [router])
 
   const handleRegister = async () => {
     setMessage('登録中...')
@@ -53,8 +68,8 @@ export default function TeamRegisterPage() {
 
     console.log('✅ チーム登録成功:', team)
 
-      setMessage('登録完了！ログイン画面に移動します...')
-      setTimeout(() => router.push('/team/login'), 1500)
+    setMessage('登録完了！ログイン画面に移動します...')
+    setTimeout(() => router.push('/team/login'), 1500)
   }
 
   return (
