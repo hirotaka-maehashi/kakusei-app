@@ -116,12 +116,12 @@ useEffect(() => {
 useEffect(() => {
   const checkAccess = async () => {
     const { data: { user } } = await supabase.auth.getUser()
-
     if (!user) {
       router.push('/login')
       return
     }
 
+    // ✅ 1. user_profiles に存在するなら「管理者」とみなす
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('role')
@@ -129,43 +129,34 @@ useEffect(() => {
       .maybeSingle()
 
     if (profile?.role === 'admin') {
-      const selectedTeamId =
-        typeof window !== 'undefined' ? localStorage.getItem('selectedTeamId') : null
-
+      const selectedTeamId = localStorage.getItem('selectedTeamId')
       if (selectedTeamId) {
         setTeamId(selectedTeamId)
         setAuthorized(true)
       } else {
-        console.warn('管理者ですが selectedTeamId が未設定です')
         router.push('/dashboard')
       }
       return
     }
 
-    if (profile?.role === 'coach') {
-      const { data: team } = await supabase
-        .from('teams')
-        .select('id')
-        .eq('coach_user_id', user.id)
-        .maybeSingle()
+    // ✅ 2. 管理者ではなかった場合（＝user_profiles に存在しない）→ コーチ扱いで teams を照合
+    const { data: team } = await supabase
+      .from('teams')
+      .select('id')
+      .eq('coach_user_id', user.id)
+      .maybeSingle()
 
-      if (team?.id) {
-        setTeamId(team.id)
-        setAuthorized(true)
-        return
-      }
-
-      console.warn('コーチですが team_id を取得できませんでした')
+    if (team?.id) {
+      setTeamId(team.id)
+      setAuthorized(true)
+    } else {
       router.push('/dashboard')
-      return
     }
-
-    // ❌ player や role 不明ユーザーはアクセス拒否
-    router.push('/dashboard')
   }
 
   checkAccess()
 }, [router])
+
 
   if (!authorized) {
     return <p style={{ padding: '2rem' }}>アクセス確認中...</p>
