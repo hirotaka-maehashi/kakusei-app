@@ -10,10 +10,17 @@ export default function TeamCallbackPage() {
   useEffect(() => {
     const handleCallback = async () => {
       // セッションの復元
-      await supabase.auth.getSession()
-      await supabase.auth.getUser()
+      const { data: sessionData } = await supabase.auth.getSession()
+      const session = sessionData.session
 
-      // 無条件でチーム登録ページへ遷移
+      // ✅ 認証チェック
+      if (!session || !session.user) {
+        console.warn('❌ セッションなし → /team/login に戻します')
+        router.push('/team/login')
+        return
+      }
+
+      // ✅ 認証OK → チーム登録ページへ進む
       router.push('/team/register')
     }
 
