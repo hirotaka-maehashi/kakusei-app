@@ -1,0 +1,351 @@
+.container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  min-height: 100vh; /* ✅ 高さ確保 */
+  padding-bottom: 10rem; /* ✅ フッターやボタンのための余白 */
+  background-color: #f9f9f9;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.heading {
+  font-size: 1.75rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #ccc;
+  padding-bottom: 0.5rem;
+}
+
+.section {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem; /* ✅ セクション同士の余白 */
+}
+
+.section p {
+  margin: 0.5rem 0;
+  font-size: 1rem;
+  line-height: 1.6; /* ✅ 行間を少し広くして読みやすく */
+}
+
+.backButton {
+  padding: 0.5rem 1.2rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border: none;
+  color: white;
+}
+
+/* メインアクション用（青） */
+.primaryButton {
+  background-color: #2563eb;
+}
+
+.primaryButton:hover {
+  background-color: #1d4ed8;
+}
+
+/* サブアクション用（グレー） */
+.secondaryButton {
+  background-color: #398b62;
+}
+
+.secondaryButton:hover {
+  background-color: #4b5563;
+}
+
+.buttonRow {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.shotCard {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background-color: #f9f9f9;
+  font-size: 0.95rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.resultBadge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  border-radius: 12px;
+  color: white;
+}
+
+.goal {
+  background-color: #16a34a; /* 緑 */
+}
+
+.noGoal {
+  background-color: #dc2626; /* 赤 */
+}
+
+.resultBadge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  border-radius: 12px;
+  color: white;
+}
+
+.goal {
+  background-color: #16a34a; /* 緑 */
+}
+
+.noGoal {
+  background-color: #dc2626; /* 赤 */
+}
+
+.save {
+  background-color: #2563eb; /* 青 */
+}
+
+.noSave {
+  background-color: #f97316; /* オレンジ */
+}
+
+.note {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+.analysisBadge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  border-radius: 6px;
+  margin-left: 0.5rem;
+}
+
+.good {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.bad {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.avg {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.statRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.3rem;
+  font-size: 1rem;
+}
+
+.analysisBadge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: bold;
+  border-radius: 6px;
+  margin-left: 0.5rem;
+}
+
+.good {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.bad {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.avg {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+/* 🆕 グリッド化で整列 */
+.cardRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+/* 🆕 カード内の余白・階層 */
+.statCard {
+  background: #fff;
+  padding: 1rem 1.2rem;
+  border-radius: 10px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.04);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100px;
+}
+
+.statCard span {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 0.4rem;
+}
+
+.statCard strong {
+  font-size: 1rem; /* ⬅ 小さくする */
+  font-weight: 600;
+  color: #111;
+}
+
+/* 🆕 見出しの下マージン調整 */
+.section h3 {
+  font-size: 1.2rem;
+  margin-bottom: 0.75rem;
+  border-left: 4px solid #2563eb;
+  padding-left: 0.5rem;
+  color: #111827;
+}
+
+.section h4 {
+  font-size: 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* 🆕 リスト（背番号・時間など） */
+.inlineList {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  max-height: 150px; /* ← 任意：高さ制限を設定 */
+  overflow-y: auto;  /* ← スクロール可能にする */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* ← 🔥 */
+  gap: 0.4rem 1rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: #333;
+}
+
+.inlineList li::before {
+  content: "・";
+  margin-right: 0.3em;
+  color: #bbb;
+}
+
+.timeZoneTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.75rem;
+  font-size: 0.95rem;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.timeZoneTable td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #eee;
+}
+
+.timeZoneTable td:first-child {
+  color: #374151;
+  width: 50%;
+}
+
+.timeZoneTable td:last-child {
+  text-align: right;
+  font-weight: 500;
+  color: #111827;
+}
+
+.section h4 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.4rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.editButtons {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.editButtons button {
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+/* 保存ボタン（青） */
+.editButtons button:first-child {
+  background-color: #2563eb;
+  color: white;
+}
+
+.editButtons button:first-child:hover {
+  background-color: #1e40af;
+}
+
+/* キャンセル or 削除ボタン（グレー） */
+.editButtons button:last-child {
+  background-color: #e5e7eb;
+  color: #111;
+}
+
+.editButtons button:last-child:hover {
+  background-color: #d1d5db;
+}
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+}
+
+.editForm label {
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+}
+
+.editForm input,
+.editForm select {
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.95rem;
+  width: 100%;
+  box-sizing: border-box;
+}

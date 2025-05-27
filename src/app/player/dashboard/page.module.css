@@ -1,0 +1,253 @@
+.container {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  background: #f7f9fc;
+  min-height: 100vh;
+  padding-bottom: 10rem;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.pageTitle {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #0d3b84;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.5rem;
+}
+
+.sectionTitle {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 0.75rem;
+  margin-top: 2rem;
+  color: #333;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  font-family: 'Helvetica Neue', sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.topTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+  font-size: 0.9rem;
+}
+
+.topTable th,
+.topTable td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #ccc;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.detailButton {
+  background-color: #0d3b84;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.detailButton:hover {
+  background-color: #0b2f6b;
+}
+
+.buttonArea {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.possessionBlock {
+  background-color: #f9fafb;
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.infoBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1rem;
+  color: #333;
+  padding: 0.25rem 0;
+  border-bottom: 1px dashed #e0e0e0;
+}
+
+.label {
+  font-weight: 600;
+  color: #666;
+  flex: 1;
+}
+
+.scoreRow {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1d4ed8;
+}
+
+.evaluationBlock {
+  background-color: #f9fafb;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin-top: 1rem;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: #0d3b84;
+  color: white;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+}
+
+.headerTitle {
+  font-size: 1rem;
+  font-weight: bold;
+  flex: 1;
+  text-align: center;
+}
+
+.menuButton {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+.dropdown {
+  position: absolute;
+  top: 56px;
+  right: 1rem;
+  background-color: white;
+  color: #333;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  min-width: 160px;
+}
+
+.dropdown button {
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.dropdown button:hover {
+  background-color: #f3f4f6;
+}
+
+.topTable {
+  width: 100%;
+  table-layout: fixed; /* ← 各列の幅を固定に */
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.topTable td,
+.topTable th {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #ccc;
+  text-align: left;
+  white-space: normal;         /* ← 改行を許可 */
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.4;            /* ← 行間を確保 */
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 800px;  /* ← ここで縦に伸びすぎないよう制限 */
+  width: 100%;
+}
+
+.topTable th:nth-child(1),
+.topTable td:nth-child(1) {
+  width: 15%; /* No */
+}
+
+.topTable th:nth-child(2),
+.topTable td:nth-child(2) {
+  width: 45%; /* 項目名 */
+}
+
+.topTable th:nth-child(3),
+.topTable td:nth-child(3) {
+  width: 25%; /* 選手名 */
+}
+
+.topTable th:nth-child(4),
+.topTable td:nth-child(4) {
+  width: 20%; /* 数値 */
+}
+
+.playerTable {
+  width: 100%;
+  table-layout: fixed;
+  min-width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.playerTable td,
+.playerTable th {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #ccc;
+  text-align: left;
+  white-space: normal;           /* ← 折り返し許可 */
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+
+.playerTable td:nth-child(1),
+.playerTable th:nth-child(1) {
+  width: 60%;
+}
+
+.playerTable td:nth-child(2),
+.playerTable th:nth-child(2) {
+  width: 40%;
+}

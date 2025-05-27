@@ -12,51 +12,56 @@ export default function LoginPage() {
   const [message, setMessage] = useState('')
   const router = useRouter()
 
-  const handleLogin = async () => {
-    setMessage('ログイン中...')
-    console.log('📩 ログイン処理開始')
+ const handleLogin = async () => {
+  setMessage('ログイン中...')
+  console.log('📩 ログイン処理開始')
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+  const { error } = await supabase.auth.signInWithPassword({ email, password })
 
-    if (error) {
-      console.error('❌ 認証エラー:', error.message)
-      setMessage('ログインに失敗しました')
-      return
-    }
-
-    // セッション書き込みの猶予
-    await new Promise((res) => setTimeout(res, 300))
-
-    // ユーザー情報を取得
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      setMessage('ユーザー取得に失敗しました')
-      return
-    }
-
-    // user_profiles を取得して role に応じて遷移
-    const { data: profile, error: profileError } = await supabase
-      .from('user_profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (profileError || !profile) {
-      console.error('❌ プロフィール取得エラー:', profileError?.message)
-      setMessage('ユーザープロフィールの取得に失敗しました')
-      return
-    }
-
-    console.log('✅ 認証成功 / ロール:', profile.role)
-
-    if (profile.role === 'admin') {
-      router.push('/dashboard')
-    } else if (profile.role === 'player') {
-      router.push('/player/home') // 例：選手用トップページ
-    } else {
-      setMessage('不明なユーザー種別です')
-    }
+  if (error) {
+    console.error('❌ 認証エラー:', error.message)
+    setMessage('ログインに失敗しました')
+    return
   }
+
+  // セッション書き込みの猶予
+  await new Promise((res) => setTimeout(res, 300))
+
+  // ユーザー情報を取得
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    setMessage('ユーザー取得に失敗しました')
+    return
+  }
+
+  // user_profiles を取得して role に応じて遷移
+  const { data: profile, error: profileError } = await supabase
+    .from('user_profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (profileError || !profile) {
+    console.error('❌ プロフィール取得エラー:', profileError?.message)
+    setMessage('ユーザープロフィールの取得に失敗しました')
+    return
+  }
+
+  console.log('✅ 認証成功 / ロール:', profile.role)
+
+  // ✅ ログイン時にまずplayerIdをクリア（全ロール共通）
+  localStorage.removeItem('playerId')
+
+  if (profile.role === 'admin') {
+    router.push('/dashboard')
+  } else if (profile.role === 'player') {
+    // ✅ 選手のIDをlocalStorageに保存（将来的にsupabase.user.idが選手と紐づいている前提）
+    localStorage.setItem('playerId', user.id)
+    router.push('/player/home') // 選手用トップページへ
+  } else {
+    setMessage('不明なユーザー種別です')
+  }
+}
 
   return (
     <main className={styles.container}>

@@ -236,6 +236,8 @@ useEffect(() => {
         } else {
           console.warn('⚠️ チーム一覧取得失敗:', teamError)
         }
+        setLoading(false)
+        return 
       }
 
       // ✅ コーチチェック
@@ -264,6 +266,8 @@ useEffect(() => {
         } else if (matchError) {
           console.warn('⚠️ コーチの試合データ取得失敗:', matchError)
         }
+        setLoading(false)
+        return // ✅ コーチはここで終了
       }
     }
 
@@ -297,24 +301,16 @@ if (playerId && !matched) {
       position: null,
       birth_date: null,
     }]) 
-
-    // ✅ Supabase に team_id を明示的にセット（←ここが追加ポイント）
-    await supabase.rpc('set_config', {
-      key: 'app.current_team_id',
-      value: playerData.team_id
-    })
   } else {
     console.warn('❌ 選手の team_id が取得できませんでした')
   }
+   setLoading(false)
+   return // ✅ 選手はここで終了
 }
 
 // ❌ どのロールにも該当しない場合はリダイレクト
-if (!matched) {
-  console.warn('❌ ロール該当なし → /player/login にリダイレクト')
-  router.push('/player/login')
-  return
-}
-    setLoading(false)
+// すべてのロールに該当しなかった場合（安全対策）
+    router.push('/player/login')
   }
 
   fetchDashboardData()
@@ -438,6 +434,8 @@ return (
   onChange={async (e) => {
     const selectedId = e.target.value
     setTeamId(selectedId)
+
+    localStorage.setItem('selectedTeamId', selectedId)
 
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     if (userError || !user) {
@@ -581,61 +579,62 @@ return (
 </table>
 
 {/* 選手一覧セクション */}
-<section className={styles.playerSection}>
-  <div className={styles.sectionHeader}>
-    <h2 className={styles.pageTitle}>登録選手一覧</h2>
-    <button className={styles.newPlayerButton} onClick={() => router.push('/admin/players/new')}>
-      ＋ 新規選手登録
-    </button>
-  </div>
+{role !== 'player' && (
+  <section className={styles.playerSection}>
+    <div className={styles.sectionHeader}>
+      <h2 className={styles.pageTitle}>登録選手一覧</h2>
+      <button className={styles.newPlayerButton} onClick={() => router.push('/admin/players/new')}>
+        ＋ 新規選手登録
+      </button>
+    </div>
 
-  <table className={styles.table}>
-    <thead>
-      <tr>
-        <th>氏名</th>
-        <th>背番号</th>
-        <th>ポジション</th>
-        <th>年齢</th>
-      </tr>
-    </thead>
-<tbody>
-  {players.length > 0 ? (
-    [...players]
-      .sort((a, b) => {
-       const positionOrder: Record<'GK' | 'DF' | 'MF' | 'FW', number> = {
-  GK: 1,
-  DF: 2,
-  MF: 3,
-  FW: 4
-}
-
-const posA = positionOrder[a.position as 'GK' | 'DF' | 'MF' | 'FW'] ?? 99
-const posB = positionOrder[b.position as 'GK' | 'DF' | 'MF' | 'FW'] ?? 99
-
-        if (posA !== posB) return posA - posB
-
-        const numA = a.uniform_number ?? 999
-        const numB = b.uniform_number ?? 999
-
-        return numA - numB
-      })
-      .map(player => (
-        <tr key={player.id}>
-          <td>{player.name}</td>
-          <td>{player.uniform_number}</td>
-          <td>{player.position}</td>
-          <td>{player.birth_date ? calculateAge(player.birth_date) : '-'}</td>
+    <table className={styles.table}>
+      <thead>
+        <tr>
+          <th>氏名</th>
+          <th>背番号</th>
+          <th>ポジション</th>
+          <th>年齢</th>
         </tr>
-      ))
-  ) : (
-    <tr>
-      <td colSpan={4}>選手データがまだありません。</td>
-    </tr>
-  )}
-</tbody>
+      </thead>
+      <tbody>
+        {players.length > 0 ? (
+          [...players]
+            .sort((a, b) => {
+              const positionOrder: Record<'GK' | 'DF' | 'MF' | 'FW', number> = {
+                GK: 1,
+                DF: 2,
+                MF: 3,
+                FW: 4
+              }
 
-  </table>
-</section>
+              const posA = positionOrder[a.position as 'GK' | 'DF' | 'MF' | 'FW'] ?? 99
+              const posB = positionOrder[b.position as 'GK' | 'DF' | 'MF' | 'FW'] ?? 99
+
+              if (posA !== posB) return posA - posB
+
+              const numA = a.uniform_number ?? 999
+              const numB = b.uniform_number ?? 999
+
+              return numA - numB
+            })
+            .map(player => (
+              <tr key={player.id}>
+                <td>{player.name}</td>
+                <td>{player.uniform_number}</td>
+                <td>{player.position}</td>
+                <td>{player.birth_date ? calculateAge(player.birth_date) : '-'}</td>
+              </tr>
+            ))
+        ) : (
+          <tr>
+            <td colSpan={4}>選手データがまだありません。</td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  </section>
+)}
 </main>
   </>
 )

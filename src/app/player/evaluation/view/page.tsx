@@ -22,8 +22,6 @@ export default function EvaluationViewPage() {
   const [categoryValue, setCategoryValue] = useState('')
   const [selectedGender, setSelectedGender] = useState('')
   const router = useRouter()
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editBuffer, setEditBuffer] = useState<Record<string, string>>({})
   const [role, setRole] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const [userTeamId, setUserTeamId] = useState<string | null>(null)
@@ -73,56 +71,10 @@ const fetchPlayers = useCallback(async () => {
 useEffect(() => {
   const fetchUserInfo = async () => {
     const { data: { user } } = await supabase.auth.getUser()
-    const userId = user?.id
-
-    if (!userId) {
-      console.warn('❌ 認証されていないユーザーです')
-      return
-    }
-
-    setUserId(userId)
-
-    // 🛡 管理者チェック
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('role')
-      .eq('id', userId)
-      .maybeSingle()
-
-    if (profile?.role === 'admin') {
-      const selectedTeamId = typeof window !== 'undefined'
-        ? localStorage.getItem('selectedTeamId')
-        : null
-
-      if (selectedTeamId) {
-        setRole('admin')
-        setUserTeamId(selectedTeamId)
-        console.log('🛡 管理者ログイン（チーム選択済）:', { userId, teamId: selectedTeamId })
-      } else {
-        console.warn('❌ 管理者ですが selectedTeamId が未設定 → ダッシュボードに戻します')
-        router.push('/dashboard')
-      }
-      return
-    }
-
-    // 🧢 コーチチェック
-    const { data: team } = await supabase
-      .from('teams')
-      .select('id')
-      .eq('coach_user_id', userId)
-      .maybeSingle()
-
-    if (team?.id) {
-      setRole('coach')
-      setUserTeamId(team.id)
-      console.log('🧢 コーチログイン:', { userId, teamId: team.id })
-      return
-    }
-
-    // 👟 選手（非認証 / localStorageベース）
     const localPlayerId =
       typeof window !== 'undefined' ? localStorage.getItem('playerId') : null
 
+    // ✅ 選手：認証していないけどlocalStorageにIDがある
     if (localPlayerId) {
       const { data: player } = await supabase
         .from('players')
@@ -142,18 +94,53 @@ useEffect(() => {
       }
     }
 
-    console.warn('❌ ロールを特定できませんでした → /login へ遷移')
-    router.push('/login')
+    // 🔐 認証済みユーザー（admin / coach）
+    if (!user) {
+      console.warn('❌ 非認証かつ playerId も未設定 → ロール不明')
+      return
+    }
+
+    const userId = user.id
+    setUserId(userId)
+
+    // 🧢 コーチ判定
+    const { data: team } = await supabase
+      .from('teams')
+      .select('id')
+      .eq('coach_user_id', userId)
+      .maybeSingle()
+
+    if (team?.id) {
+      setRole('coach')
+      setUserTeamId(team.id)
+      console.log('🧢 コーチログイン:', { userId, teamId: team.id })
+      return
+    }
+
+    // 🛡 管理者判定
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('role')
+      .eq('id', userId)
+      .maybeSingle()
+
+    if (profile?.role === 'admin') {
+      setRole('admin')
+      console.log('🛡 管理者ログイン:', userId)
+      return
+    }
+
+    console.warn('❌ ロールを特定できませんでした')
   }
 
   fetchUserInfo()
-}, [router])
+}, [])
 
 useEffect(() => {
   if (role && userId) {
     fetchPlayers()
   }
-}, [role, userId, userTeamId, fetchPlayers]) // ✅ ← 修正済み
+}, [role, userId, userTeamId, fetchPlayers]) // ✅ ← ここが修正ポイント
 
 useEffect(() => {
   const fetchBenchmark = async (cat: string, gender: string) => {
@@ -236,12 +223,12 @@ const fetchEvaluations = useCallback(async () => {
     setEvaluations([])
     setAvgData({})
   }
-}, [role, userId, selectedPlayerId])
+}, [role, userId, selectedPlayerId]) // ✅ 依存追加！
 
 useEffect(() => {
   if (!selectedPlayerId) return
   fetchEvaluations()
-}, [selectedPlayerId, fetchEvaluations])
+}, [selectedPlayerId, fetchEvaluations]) // ✅ 完全対応
 
   const labelMap: Record<string, string> = {
     // フィジカル
@@ -314,6 +301,7 @@ const sections = [
     keys: ['height_cm', 'weight_kg', 'bmi', 'body_fat_pct']
   }
 ]
+
 
 const diffThresholds: Record<string, Record<string, Record<string, { good: number; try: number }>>> = {
   u12: {
@@ -538,50 +526,6 @@ const diffThresholds: Record<string, Record<string, Record<string, { good: numbe
   },
 };
 
-const handleEdit = (record: EvaluationRecord) => {
-  setEditingId(record.id.toString())
-  const buffer: Record<string, string> = {}
-  Object.keys(labelMap).forEach(key => {
-    buffer[key] = record[key]?.toString() ?? ''
-  })
-  setEditBuffer(buffer)
-}
-
-const handleSave = async (id: string) => {
-  const { error } = await supabase
-    .from('player_evaluations')
-    .update(editBuffer)
-    .eq('id', id)
-
-  if (error) {
-    alert('❌ 保存に失敗しました')
-    return
-  }
-
-  alert('✅ 保存しました')
-  setEditingId(null)
-  setEditBuffer({})
-  await fetchEvaluations()
-}
-
-const handleDelete = async (id: string) => {
-  const ok = confirm('本当に削除しますか？')
-  if (!ok) return
-
-  const { error } = await supabase
-    .from('player_evaluations')
-    .delete()
-    .eq('id', id)
-
-  if (error) {
-    alert('❌ 削除に失敗しました')
-    return
-  }
-
-  alert('✅ 削除しました')
-  await fetchEvaluations()
-}
-
 function getEvaluationLabel(
   diff: number,
   thresholds: { good: number; try: number }
@@ -643,10 +587,10 @@ if (!selectedPlayerId) {
       ) : (
         <>
           <p style={{ padding: '1rem', color: 'gray' }}>
-            現在、登録されている選手がいません。
+            現在、あなたの選手データが見つかりません。
           </p>
           <button
-            onClick={() => router.push('/dashboard')}
+            onClick={() => router.push('/player/dashboard')}
             className={styles.backButton}
           >
             ← ダッシュボードに戻る
@@ -660,23 +604,6 @@ if (!selectedPlayerId) {
 return (
   <main className={styles.container}>
     <h1 className={styles.pageTitle}>評価データの確認</h1>
-
-{role !== 'player' && (
-  <div className={styles.selector}>
-    <label>選手を選択:</label>
-    <select
-      value={selectedPlayerId}
-      onChange={e => setSelectedPlayerId(e.target.value)}
-    >
-      <option value="">--選択してください--</option>
-      {players.map(player => (
-        <option key={player.id} value={player.id}>
-          {player.name}
-        </option>
-      ))}
-    </select>
-  </div>
-)}
 
 <div className={styles.selector}>
   <label>比較基準カテゴリー:</label>
@@ -791,88 +718,40 @@ return (
   </div>
 ))}
 
-        <div className={styles.card}>
-          <h3 className={styles.cardSubtitle}>過去の評価データ</h3>
-          <div className={styles.tableWrapper}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>記録日</th>
-                  {Object.keys(labelMap).map(key => (
-                    <th key={`head-${key}`}>{labelMap[key]}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-{evaluations.map((record) => (
-  <tr key={`${record.recorded_at}-${record.id}`}>
-    <td>{record.recorded_at}</td>
-    {Object.keys(labelMap).map((key) => (
-      <td key={`cell-${record.id}-${key}`}>
-        {editingId === record.id ? (
-          <input
-            type="text"
-            value={editBuffer[key] ?? ''}
-            onChange={(e) =>
-              setEditBuffer((prev) => ({
-                ...prev,
-                [key]: e.target.value,
-              }))
-            }
-            style={{ width: '60px' }}
-          />
-        ) : (
-          record[key] ?? '-'
-        )}
-      </td>
-    ))}
-
-<td className={styles.buttonGroup}>
-  {editingId === record.id.toString() ? (
-    <>
-      <button
-        onClick={() => handleSave(record.id.toString())}
-        className={styles.saveButton}
-      >
-        保存
-      </button>
-      <button
-        onClick={() => setEditingId(null)}
-        className={styles.cancelButton}
-      >
-        キャンセル
-      </button>
-    </>
-  ) : (
-    <>
-      <button
-        onClick={() => handleEdit(record)}
-        className={styles.editButton}
-      >
-        編集
-      </button>
-      <button
-        onClick={() => handleDelete(record.id.toString())}
-        className={styles.deleteButton}
-      >
-        削除
-      </button>
-    </>
-  )}
-</td>
-  </tr>
-))}
-
-              </tbody>
-            </table>
-          </div>
-        </div>
+<div className={styles.card}>
+  <h3 className={styles.cardSubtitle}>過去の評価データ</h3>
+  <div className={styles.tableWrapper}>
+    <table className={styles.table}>
+      <thead>
+        <tr>
+          <th>記録日</th>
+          {Object.keys(labelMap).map(key => (
+            <th key={`head-${key}`}>{labelMap[key]}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {evaluations.map((record) => (
+          <tr key={`${record.recorded_at}-${record.id}`}>
+            <td>{record.recorded_at}</td>
+            {Object.keys(labelMap).map((key) => (
+              <td key={`cell-${record.id}-${key}`}>
+                {record[key] ?? '-'}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</div>
       </>
     )}
 <button
-  onClick={() => router.push('/dashboard')}
+  onClick={() => router.push('/player/dashboard')}
   className={styles.backButton}
->← ダッシュボードに戻る
+>
+  ← ダッシュボードに戻る
 </button>
 </main>
 )

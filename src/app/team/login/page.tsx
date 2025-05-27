@@ -12,53 +12,56 @@ export default function TeamLoginPage() {
   const [message, setMessage] = useState('')
   const router = useRouter()
 
-  const handleLogin = async () => {
-    setMessage('ログイン中...')
-    console.log('📩 チームログイン処理開始')
+ const handleLogin = async () => {
+  setMessage('ログイン中...')
+  console.log('📩 チームログイン処理開始')
 
-    const { error: loginError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+  const { error: loginError } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
 
-    if (loginError) {
-      console.error('❌ ログインエラー:', loginError.message)
-      setMessage('ログインに失敗しました')
-      return
-    }
-
-    // 少し待ってセッション確定
-    await new Promise((res) => setTimeout(res, 300))
-
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      console.error('❌ ユーザー取得失敗:', userError?.message)
-      setMessage('ユーザー情報の取得に失敗しました')
-      return
-    }
-
-    // チーム情報の有無確認（coach_user_id 経由）
-    const { data: teamData, error: teamError } = await supabase
-      .from('teams')
-      .select('id')
-      .eq('coach_user_id', user.id)
-      .maybeSingle()
-
-    if (teamError) {
-      console.error('❌ チーム取得エラー:', teamError.message)
-      setMessage('チーム情報の取得に失敗しました')
-      return
-    }
-
-    if (!teamData) {
-      console.warn('⚠️ チーム未登録 → /team/register へ')
-      router.push('/team/register')
-      return
-    }
-
-    console.log('✅ チーム確認成功 → /dashboard へ遷移')
-    router.push('/dashboard')
+  if (loginError) {
+    console.error('❌ ログインエラー:', loginError.message)
+    setMessage('ログインに失敗しました')
+    return
   }
+
+  // 少し待ってセッション確定
+  await new Promise((res) => setTimeout(res, 300))
+
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError || !user) {
+    console.error('❌ ユーザー取得失敗:', userError?.message)
+    setMessage('ユーザー情報の取得に失敗しました')
+    return
+  }
+
+  // ✅ ロール判定に関係なく、playerId は毎回クリアする
+  localStorage.removeItem('playerId')
+
+  // チーム情報の有無確認（coach_user_id 経由）
+  const { data: teamData, error: teamError } = await supabase
+    .from('teams')
+    .select('id')
+    .eq('coach_user_id', user.id)
+    .maybeSingle()
+
+  if (teamError) {
+    console.error('❌ チーム取得エラー:', teamError.message)
+    setMessage('チーム情報の取得に失敗しました')
+    return
+  }
+
+  if (!teamData) {
+    console.warn('⚠️ チーム未登録 → /team/register へ')
+    router.push('/team/register')
+    return
+  }
+
+  console.log('✅ チーム確認成功 → /dashboard へ遷移')
+  router.push('/dashboard')
+}
 
   return (
     <main className={styles.container}>

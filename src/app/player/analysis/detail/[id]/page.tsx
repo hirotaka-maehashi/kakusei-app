@@ -15,7 +15,6 @@ type Shot = {
   minute: string
 }
 
-
 type Hold = {
   firstMin: number
   firstSec: number
@@ -115,6 +114,7 @@ const defendingEfficiency = totalXga > 0
 const concedeRate = opponentShots.length > 0
   ? Math.round((goalsAgainst / opponentShots.length) * 100)
   : 0
+
 
   const scoringComment =
     scoringEfficiency >= 120 ? '決定力が非常に高い試合' :
@@ -236,11 +236,6 @@ opponentShots.forEach(s => {
   }
 })
 
-const handleEditStart = (index: number, shot: Shot) => {
-  setEditingShotIndex(index)
-  setEditShot({ ...shot })
-}
-
 const handleSaveEdit = async (index: number) => {
   if (!editShot) return
 
@@ -300,47 +295,6 @@ const handleSaveEdit = async (index: number) => {
   setEditShot(null)
 }
 
-const handleDelete = async (index: number) => {
-  const ok = confirm('このシュートを削除しますか？')
-  if (!ok) return
-
-  const updatedShots = [...shots]
-  updatedShots.splice(index, 1)
-
-  const { error } = await supabase
-    .from('match_analyses')
-    .update({
-      analysis_json: {
-        ...match?.analysis_json,
-        shots: updatedShots
-      }
-    })
-    .eq('id', match?.id)
-
-  if (error) {
-    alert('❌ 削除失敗')
-    console.error(error)
-    return
-  }
-
-  setMatch(prev =>
-    prev
-      ? {
-          ...prev,
-          analysis_json: {
-            ...prev.analysis_json,
-            shots: updatedShots
-          }
-        }
-      : null
-  )
-}
-
-const handleOpponentEditStart = (index: number, shot: Shot) => {
-  setEditingOpponentIndex(index)
-  setEditOpponentShot({ ...shot })
-}
-
 const handleOpponentSaveEdit = async (index: number) => {
   if (!editOpponentShot) return
 
@@ -395,41 +349,6 @@ const handleOpponentSaveEdit = async (index: number) => {
 
   setEditingOpponentIndex(null)
   setEditOpponentShot(null)
-}
-
-const handleOpponentDelete = async (index: number) => {
-  const ok = confirm('このシュートを削除しますか？')
-  if (!ok) return
-
-  const updated = [...opponentShots]
-  updated.splice(index, 1)
-
-  const { error } = await supabase
-    .from('match_analyses')
-    .update({
-      analysis_json: {
-        ...match?.analysis_json,
-        opponentShots: updated
-      }
-    })
-    .eq('id', match?.id)
-
-  if (error) {
-    alert('❌ 削除失敗')
-    return
-  }
-
-  setMatch(prev =>
-    prev
-      ? {
-          ...prev,
-          analysis_json: {
-            ...prev.analysis_json,
-            opponentShots: updated
-          }
-        }
-      : null
-  )
 }
 
   return (
@@ -740,10 +659,6 @@ const handleOpponentDelete = async (index: number) => {
               {s.result === '1' ? 'GOAL' : 'NO GOAL'}
             </span>
           </p>
-          <div className={styles.editButtons}>
-            <button onClick={() => handleEditStart(i, s)}>編集</button>
-            <button onClick={() => handleDelete(i)}>削除</button>
-          </div>
         </>
       )}
     </div>
@@ -836,10 +751,6 @@ const handleOpponentDelete = async (index: number) => {
               {s.result === '0' ? 'SAVE' : 'NO SAVE'}
             </span>
           </p>
-          <div className={styles.editButtons}>
-            <button onClick={() => handleOpponentEditStart(i, s)}>編集</button>
-            <button onClick={() => handleOpponentDelete(i)}>削除</button>
-          </div>
         </>
       )}
     </div>
@@ -864,10 +775,9 @@ const handleOpponentDelete = async (index: number) => {
       router.push(playerId ? '/player/analysis/history' : '/analysis/history')
     }}
   >
-    試合履歴に戻る
+    試合履歴を見る
   </button>
 </div>
-
     </main>
   )
 }

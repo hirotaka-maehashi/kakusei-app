@@ -23,7 +23,8 @@ export default function PlayerListPage() {
   const [editedPlayer, setEditedPlayer] = useState<Partial<Player>>({})
   const router = useRouter()
   const [authorized, setAuthorized] = useState(false)
-　const positionOrder = useMemo(() => ['GK', 'DF', 'MF', 'FW'], [])
+  const positionOrder = useMemo(() => ['GK', 'DF', 'MF', 'FW'], [])
+  const [teamId, setTeamId] = useState<string | null>(null)
 
   const sortPlayers = useCallback((players: Player[]) => {
     return [...players].sort((a, b) => {
@@ -36,22 +37,25 @@ export default function PlayerListPage() {
     })
   }, [positionOrder])
 
-  useEffect(() => {
-    const fetchPlayers = async () => {
-      const { data, error } = await supabase
-        .from('players')
-        .select('id, name, position, birth_date, uniform_number, height, weight')
+useEffect(() => {
+  const fetchPlayers = async () => {
+    if (!teamId) return // ✅ teamIdが取得されるまでは実行しない
 
-      if (error) {
-        console.error('取得エラー:', error)
-      } else {
-        const sorted = sortPlayers(data)
-        setPlayers(sorted)
-      }
+    const { data, error } = await supabase
+      .from('players')
+      .select('id, name, position, birth_date, uniform_number, height, weight')
+      .eq('team_id', teamId) // ✅ ここが追加ポイント！
+
+    if (error) {
+      console.error('取得エラー:', error)
+    } else {
+      const sorted = sortPlayers(data)
+      setPlayers(sorted)
     }
+  }
 
-    fetchPlayers()
-  }, [sortPlayers])
+  fetchPlayers()
+}, [sortPlayers, teamId]) // ✅ teamId が変わった時にも再取得
 
   const calculateAge = (birthDate: string) => {
     return dayjs().diff(dayjs(birthDate), 'year')
@@ -109,48 +113,59 @@ export default function PlayerListPage() {
     }
   }
 
-  useEffect(() => {
-    const checkAccess = async () => {
-      const playerId = typeof window !== 'undefined' ? localStorage.getItem('playerId') : null
-      const { data: { user } } = await supabase.auth.getUser()
+useEffect(() => {
+  const checkAccess = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
 
-      if (!user && !playerId) {
-        router.push('/login')
-        return
-      }
+    if (!user) {
+      router.push('/login')
+      return
+    }
 
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('role')
-        .eq('id', user?.id || '')
-        .maybeSingle()
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle()
 
-      if (profile?.role === 'admin') {
+    if (profile?.role === 'admin') {
+      const selectedTeamId =
+        typeof window !== 'undefined' ? localStorage.getItem('selectedTeamId') : null
+
+      if (selectedTeamId) {
+        setTeamId(selectedTeamId)
         setAuthorized(true)
-        return
+      } else {
+        console.warn('管理者ですが selectedTeamId が未設定です')
+        router.push('/dashboard')
       }
+      return
+    }
 
+    if (profile?.role === 'coach') {
       const { data: team } = await supabase
         .from('teams')
         .select('id')
-        .eq('coach_user_id', user?.id || '')
+        .eq('coach_user_id', user.id)
         .maybeSingle()
 
-      if (team) {
+      if (team?.id) {
+        setTeamId(team.id)
         setAuthorized(true)
         return
       }
 
-      if (playerId) {
-        setAuthorized(true)
-        return
-      }
-
+      console.warn('コーチですが team_id を取得できませんでした')
       router.push('/dashboard')
+      return
     }
 
-    checkAccess()
-  }, [router])
+    // ❌ player や role 不明ユーザーはアクセス拒否
+    router.push('/dashboard')
+  }
+
+  checkAccess()
+}, [router])
 
   if (!authorized) {
     return <p style={{ padding: '2rem' }}>アクセス確認中...</p>

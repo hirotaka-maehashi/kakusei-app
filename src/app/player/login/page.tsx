@@ -64,7 +64,7 @@ export default function PlayerLoginPage() {
     
     localStorage.setItem('playerId', player.id)
     console.log('✅ ログイン成功 → ダッシュボードへ遷移')
-    router.push('/dashboard')
+    router.push('/player/dashboard')
   }
 
   return (

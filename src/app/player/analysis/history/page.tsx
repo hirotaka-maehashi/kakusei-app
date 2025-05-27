@@ -43,21 +43,43 @@ export default function AnalysisHistoryPage() {
   router.push('/login')
 }
 
-  useEffect(() => {
-    const fetchData = async () => {
+useEffect(() => {
+  const fetchData = async () => {
+    const playerId = localStorage.getItem('playerId')
+
+    if (playerId) {
+      // ✅ 選手（非認証）処理
+      const { data: player } = await supabase
+        .from('players')
+        .select('team_id')
+        .eq('id', playerId)
+        .maybeSingle()
+
+      if (player?.team_id) {
+        setRole('player')
+        setTeamName('自チームの試合')
+
+        const { data } = await supabase
+          .from('match_analyses')
+          .select('id, match_date, opponent, score_for, score_against, analysis_json')
+          .eq('team_id', player.team_id)
+          .order('match_date', { ascending: false })
+
+        if (data) setMatches(data)
+      }
+
+    } else {
+      // ✅ 管理者 or コーチ（認証あり）処理
       const { data: sessionData } = await supabase.auth.getSession()
       const session = sessionData.session
 
       if (!session || !session.user) {
-        console.warn('❌ セッションなし → /loginへ')
-        router.push('/login')
+        console.warn('セッションなし → 表示しない')
         return
       }
 
       const user = session.user
-      let found = false
 
-      // 管理者判定
       const { data: profile } = await supabase
         .from('user_profiles')
         .select('role, name')
@@ -65,90 +87,43 @@ export default function AnalysisHistoryPage() {
         .maybeSingle()
 
       if (profile?.role === 'admin') {
-  const selectedTeamId = typeof window !== 'undefined'
-    ? localStorage.getItem('selectedTeamId')
-    : null
+        setRole('admin')
+        setAdminName(profile.name || '')
+        setTeamName('全チーム')
 
-  if (!selectedTeamId) {
-    console.warn('❌ 管理者ですが selectedTeamId が未設定 → ダッシュボードへ戻す')
-    router.push('/dashboard')
-    return
-  }
+        const { data } = await supabase
+          .from('match_analyses')
+          .select('id, match_date, opponent, score_for, score_against, analysis_json')
+          .order('match_date', { ascending: false })
 
-  setRole('admin')
-  setAdminName(profile.name || '')
-  setTeamName('選択中チーム')
-
-  const { data } = await supabase
-    .from('match_analyses')
-    .select('id, match_date, opponent, score_for, score_against, analysis_json')
-    .eq('team_id', selectedTeamId) // ✅ ← これで選択チームに絞る
-    .order('match_date', { ascending: false })
-
-  if (data) {
-    setMatches(data)
-    found = true
-  }
-}
-
-      // コーチ判定
-      if (!found) {
-        const { data: team } = await supabase
-          .from('teams')
-          .select('id, name')
-          .eq('coach_user_id', user.id)
-          .maybeSingle()
-
-        if (team) {
-          setRole('coach')
-          setTeamName(team.name)
-
-          const { data } = await supabase
-            .from('match_analyses')
-            .select('id, match_date, opponent, score_for, score_against, analysis_json')
-            .eq('team_id', team.id)
-            .order('match_date', { ascending: false })
-
-          if (data) {
-            setMatches(data)
-            found = true
-          }
-        }
+        if (data) setMatches(data)
+        return
       }
 
-      // 選手判定
-      if (!found) {
-        const { data: player } = await supabase
-          .from('players')
-          .select('team_id')
-          .eq('user_id', user.id)
-          .maybeSingle()
+      const { data: team } = await supabase
+        .from('teams')
+        .select('id, name')
+        .eq('coach_user_id', user.id)
+        .maybeSingle()
 
-        if (player?.team_id) {
-          setRole('player')
-          setTeamName('自チームの試合')
+      if (team) {
+        setRole('coach')
+        setTeamName(team.name)
 
-          const { data } = await supabase
-            .from('match_analyses')
-            .select('id, match_date, opponent, score_for, score_against, analysis_json')
-            .eq('team_id', player.team_id)
-            .order('match_date', { ascending: false })
+        const { data } = await supabase
+          .from('match_analyses')
+          .select('id, match_date, opponent, score_for, score_against, analysis_json')
+          .eq('team_id', team.id)
+          .order('match_date', { ascending: false })
 
-          if (data) {
-            setMatches(data)
-            found = true
-          }
-        }
-      }
-
-      if (!found) {
-        console.warn('❌ 該当ロールなし → 表示せず終了')
+        if (data) setMatches(data)
         return
       }
     }
+  }
 
-    fetchData()
-  }, [router])
+  fetchData()
+}, [])
 
  // 年月で絞り込み
 const filteredMatches = matches.filter(({ match_date }) => {
@@ -204,12 +179,9 @@ return (
 
     {menuOpen && (
       <div ref={menuRef} className={styles.dropdown}>
-        <button onClick={() => router.push('/dashboard')}>ダッシュボード</button>
-        <button onClick={() => { setMenuOpen(false); router.push('/admin/players/list') }}>選手一覧</button>
-    <button onClick={() => router.push('/evaluation/input')}>選手データ入力</button>
-    <button onClick={() => router.push('/evaluation/view')}>選手データ表示</button>
-    <button onClick={() => { setMenuOpen(false); router.push('/analysis/input') }}>試合分析入力</button>
-   <button onClick={() => { setMenuOpen(false); handleLogout() }}>ログアウト</button>
+        <button onClick={() => router.push('/player/dashboard')}>ダッシュボード</button>
+        <button onClick={() => router.push('/player/evaluation/view')}>選手データ詳細</button>
+       <button onClick={() => { setMenuOpen(false); handleLogout() }}>ログアウト</button>
       </div>
     )}
   </div>
