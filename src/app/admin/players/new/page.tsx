@@ -142,8 +142,11 @@ useEffect(() => {
           <option value="DF">DF（ディフェンダー）</option>
           <option value="MF">MF（ミッドフィルダー）</option>
           <option value="FW">FW（フォワード）</option>
-        </select>
-        <input className={styles.input} name="birth_date" type="date" value={form.birth_date} onChange={handleChange} required />
+          </select><label className={styles.label}>生年月日を入力してください
+          <input
+           className={styles.input}name="birth_date"type="date"value={form.birth_date}onChange={handleChange}required
+           />
+          </label>
         <input className={styles.input} name="height" type="number" placeholder="身長(cm)" value={form.height} onChange={handleChange} required />
         <input className={styles.input} name="weight" type="number" placeholder="体重(kg)" value={form.weight} onChange={handleChange} required />
         <input className={styles.input} name="login_id" placeholder="ログインID" value={form.login_id} onChange={handleChange} required />

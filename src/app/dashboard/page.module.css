@@ -311,3 +311,35 @@
   font-size: 0.95rem;
   background-color: white;
 }
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #153e90;
+  color: white;
+  padding: 0.5rem 1rem;
+}
+
+.headerLeft {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.roleLabel {
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.menuButton {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+}

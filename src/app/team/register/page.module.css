@@ -46,3 +46,11 @@
   font-size: 0.9rem;
   color: #666;
 }
+
+.select {
+  padding: 8px;
+  font-size: 16px;
+  margin: 12px 0;
+  border-radius: 4px;
+  width: 100%;
+}

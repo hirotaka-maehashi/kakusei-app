@@ -258,7 +258,7 @@ useEffect(() => {
     side_step_count: '反復横跳び(回)',
     vertical_jump_cm: '垂直跳び(cm)',
     triple_jump_cm: '三段跳び(cm)',
-    step_50s_count: 'ステップ50秒(回)',
+    step_50s_count: 'ステップ50（秒）',
     sit_ups_30s: 'シットアップ30秒(回)',
 
     // メディカル

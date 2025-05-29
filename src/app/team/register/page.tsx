@@ -7,10 +7,12 @@ import styles from './page.module.css'
 
 export default function TeamRegisterPage() {
   const [teamName, setTeamName] = useState('')
+  const [selectedTrainerId, setSelectedTrainerId] = useState('')
+  const [trainers, setTrainers] = useState<{ id: string; name: string }[]>([])
   const [message, setMessage] = useState('')
   const router = useRouter()
 
-  // ✅ 認証チェック（ページ表示直後に実行）
+  // ✅ 認証チェック
   useEffect(() => {
     const checkSession = async () => {
       const { data: sessionData } = await supabase.auth.getSession()
@@ -25,7 +27,35 @@ export default function TeamRegisterPage() {
     checkSession()
   }, [router])
 
+  // ✅ 管理者（トレーナー）一覧を取得
+  useEffect(() => {
+    const fetchTrainers = async () => {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('id, name')
+        .eq('role', 'admin')
+
+      if (error) {
+        console.error('❌ トレーナー一覧取得失敗:', error)
+      } else {
+        setTrainers(data)
+      }
+    }
+
+    fetchTrainers()
+  }, [])
+
   const handleRegister = async () => {
+    if (!teamName) {
+      setMessage('チーム名を入力してください')
+      return
+    }
+
+    if (!selectedTrainerId) {
+      setMessage('トレーナー（管理者）を選択してください')
+      return
+    }
+
     setMessage('登録中...')
 
     const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -35,12 +65,13 @@ export default function TeamRegisterPage() {
       return
     }
 
-    console.log('✅ ユーザーID:', user.id)
+    console.log('✅ ログインユーザーID（監督/コーチ）:', user.id)
 
-    // チーム登録
+    // ✅ チーム登録：監督/コーチは作成者、トレーナーは trainer_id として保存
     const { error: teamError } = await supabase.from('teams').insert({
       name: teamName,
       coach_user_id: user.id,
+      trainer_id: selectedTrainerId,
       created_at: new Date().toISOString()
     })
 
@@ -50,24 +81,6 @@ export default function TeamRegisterPage() {
       return
     }
 
-    // 登録したチーム情報を再取得（coach_user_idで検索）
-    const { data: teamData, error: fetchError } = await supabase
-      .from('teams')
-      .select('id')
-      .eq('coach_user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-
-    const team = teamData?.[0]
-
-    if (fetchError || !team) {
-      console.error('❌ チーム情報取得失敗:', fetchError)
-      setMessage('チーム情報の取得に失敗しました')
-      return
-    }
-
-    console.log('✅ チーム登録成功:', team)
-
     setMessage('登録完了！ログイン画面に移動します...')
     setTimeout(() => router.push('/team/login'), 1500)
   }
@@ -75,16 +88,32 @@ export default function TeamRegisterPage() {
   return (
     <main className={styles.container}>
       <h1 className={styles.heading}>チーム情報の登録</h1>
+
       <input
         className={styles.input}
         type="text"
-        placeholder="チーム名（例：南中サッカー部）"
+        placeholder="チーム名（例：〇〇サッカークラブ）"
         value={teamName}
         onChange={(e) => setTeamName(e.target.value)}
       />
+
+      <select
+        className={styles.select}
+        value={selectedTrainerId}
+        onChange={(e) => setSelectedTrainerId(e.target.value)}
+      >
+        <option value="">-- 担当トレーナー（管理者）を選択 --</option>
+        {trainers.map(trainer => (
+          <option key={trainer.id} value={trainer.id}>
+            {trainer.name}
+          </option>
+        ))}
+      </select>
+
       <button className={styles.button} onClick={handleRegister}>
         登録する
       </button>
+
       <p className={styles.message}>{message}</p>
     </main>
   )

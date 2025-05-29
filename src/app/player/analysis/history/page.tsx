@@ -32,6 +32,7 @@ export default function AnalysisHistoryPage() {
   const [teamName, setTeamName] = useState<string>('チーム名未設定')
   const [menuOpen, setMenuOpen] = useState(false)
   const router = useRouter()
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [role, setRole] = useState<string | null>(null)
   const [selectedYear, setSelectedYear] = useState<string>('all')
   const [selectedMonth, setSelectedMonth] = useState<string>('all')
@@ -147,6 +148,12 @@ const totalScoreAgainst = filteredMatches.reduce((sum, m) => sum + m.score_again
 const avgScoreFor = totalGames > 0 ? (totalScoreFor / totalGames).toFixed(2) : '0.00'
 const avgScoreAgainst = totalGames > 0 ? (totalScoreAgainst / totalGames).toFixed(2) : '0.00'
 
+// 平均シュート数・平均被シュート数
+const totalShots = filteredMatches.reduce((sum, m) => sum + m.analysis_json.shots.length, 0)
+const totalOpponentShots = filteredMatches.reduce((sum, m) => sum + m.analysis_json.opponentShots.length, 0)
+const avgShots = totalGames > 0 ? (totalShots / totalGames).toFixed(2) : '0.00'
+const avgOpponentShots = totalGames > 0 ? (totalOpponentShots / totalGames).toFixed(2) : '0.00'
+
 // xG/xGA
 const totalXg = filteredMatches.reduce(
   (sum, m) => sum + m.analysis_json.shots.reduce((s, x) => s + parseFloat(x.xg), 0),
@@ -167,10 +174,6 @@ return (
 <h1 className={styles.headerTitle}>
   {adminName || teamName || 'チーム名未設定'}
 </h1>
-
-<p className={styles.roleLabel}>
-  ログイン種別: {role === 'admin' ? '管理者' : role === 'coach' ? 'コーチ' : role === 'player' ? '選手' : '不明'}
-</p>
 
   <div className={styles.headerMenu}>
     <button onClick={() => setMenuOpen(!menuOpen)} className={styles.menuButton}>
@@ -231,6 +234,14 @@ return (
     <div className={styles.statsLabel}>平均失点</div>
     <div>{avgScoreAgainst}</div>
   </div>
+  <div className={styles.statsRow}>
+  <div className={styles.statsLabel}>平均シュート数</div>
+  <div>{avgShots}</div>
+</div>
+<div className={styles.statsRow}>
+  <div className={styles.statsLabel}>平均被シュート数</div>
+  <div>{avgOpponentShots}</div>
+</div>
   <div className={styles.statsRow}>
     <div className={styles.statsLabel}>平均xG</div>
     <div>{avgXg}</div>

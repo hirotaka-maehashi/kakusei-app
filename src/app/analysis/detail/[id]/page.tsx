@@ -43,6 +43,19 @@ type MatchAnalysis = {
   }
 }
 
+const thStyle = {
+  padding: '8px',
+  background: '#f0f0f0',
+  fontWeight: 'bold',
+  textAlign: 'center' as const,
+}
+
+const tdStyle = {
+  padding: '8px',
+  textAlign: 'center' as const,
+}
+
+
 export default function MatchDetailPage() {
   const { id } = useParams()
   const [match, setMatch] = useState<MatchAnalysis | null>(null)
@@ -51,6 +64,7 @@ export default function MatchDetailPage() {
   const [editShot, setEditShot] = useState<Shot | null>(null)
   const [editingOpponentIndex, setEditingOpponentIndex] = useState<number | null>(null)
   const [editOpponentShot, setEditOpponentShot] = useState<Shot | null>(null)
+  
 
   useEffect(() => {
     const fetchMatch = async () => {
@@ -73,6 +87,8 @@ export default function MatchDetailPage() {
   if (!match) return <main className={styles.container}>読み込み中...</main>
 
   const { shots = [], opponentShots = [], teamHold, opponentHold } = match.analysis_json || {}
+  const zoneStats = generateZoneStats(shots)
+  const xgaZoneStats = generateZoneStats(opponentShots)
 
   const totalXg = shots.reduce((sum, s) => sum + parseFloat(s.xg || '0'), 0)
   const totalXga = opponentShots.reduce((sum, s) => sum + parseFloat(s.xg || '0'), 0)
@@ -165,17 +181,6 @@ shots.forEach(s => {
   shotByNumber[num] = (shotByNumber[num] || 0) + 1
 })
 
-// 背番号＋時間付きのシュート（任意）
-const shotsWithTime = shots
-  .filter(s => s.minute !== undefined && s.minute !== '')
-  .map(s => {
-    const min = parseInt(s.minute)
-    const periodLabel = min > 45 ? '後半' : '前半'
-    const minuteInPeriod = min > 45 ? min - 45 : min
-    const numberDisplay = s.number ? `#${s.number}` : '#未入力'
-    return `${numberDisplay}（${periodLabel}${minuteInPeriod}分）`
-  })
-
 // ゴール決定率（ゴール数 ÷ 総シュート数）
 const shotCount = shots.length
 const decisionRate = shotCount > 0 ? Math.round((goals / shotCount) * 100) : 0
@@ -196,6 +201,21 @@ shots.forEach(s => {
     goalsByNumber[num] = (goalsByNumber[num] || 0) + 1
   }
 })
+
+const xgByNumber: Record<string, number> = {}
+shots.forEach(s => {
+  const num = s.number || '未入力'
+  const xg = parseFloat(s.xg || '0')
+  xgByNumber[num] = (xgByNumber[num] || 0) + xg
+})
+
+const xgaByNumber: Record<string, number> = {}
+opponentShots.forEach(s => {
+  const num = s.number || '未入力'
+  const xga = parseFloat(s.xg || '0')
+  xgaByNumber[num] = (xgaByNumber[num] || 0) + xga
+})
+
 // 前後半ごとの決定率（得点 ÷ シュート数）
 const decisionRateFirst = shotsFirst > 0 ? Math.round((goalsFirst / shotsFirst) * 100) : 0
 const decisionRateSecond = shotsSecond > 0 ? Math.round((goalsSecond / shotsSecond) * 100) : 0
@@ -226,15 +246,40 @@ opponentShots.forEach(s => {
     opponentGoalsByNumber[num] = (opponentGoalsByNumber[num] || 0) + 1
   }
 
-  // ✅ 背番号が空でも minute があれば表示する
+  // ✅ 背番号が空でも minute があれば表示する（+45補正はしない）
   if (s.minute !== undefined && s.minute !== '') {
-    const min = parseInt(s.minute)
-    const periodLabel = min > 45 ? '後半' : '前半'
-    const minuteInPeriod = min > 45 ? min - 45 : min
+    const periodLabel = s.period || '前半'
+    const minuteInPeriod = s.minute
     const numberDisplay = s.number ? `#${s.number}` : '#未入力'
     opponentShotsWithTime.push(`${numberDisplay}（${periodLabel}${minuteInPeriod}分）`)
   }
 })
+
+type ZoneStat = {
+  count: number
+  totalXg: number
+  goals: number
+}
+
+function generateZoneStats(shots: Shot[]): Record<string, ZoneStat> {
+  const zoneStats: Record<string, ZoneStat> = {}
+
+  shots.forEach(s => {
+    const zone = s.zone || '未入力'
+    const xg = parseFloat(s.xg || '0')
+    const isGoal = s.result === '1'
+
+    if (!zoneStats[zone]) {
+      zoneStats[zone] = { count: 0, totalXg: 0, goals: 0 }
+    }
+
+    zoneStats[zone].count += 1
+    zoneStats[zone].totalXg += xg
+    if (isGoal) zoneStats[zone].goals += 1
+  })
+
+  return zoneStats
+}
 
 const handleEditStart = (index: number, shot: Shot) => {
   setEditingShotIndex(index)
@@ -252,9 +297,8 @@ const handleSaveEdit = async (index: number) => {
     alert('時間（分）を正しく入力してください')
     return
   }
-
-  // 後半なら +45、前半はそのまま
-  const adjustedMinute = editShot.period === '後半' ? raw + 45 : raw
+  
+const adjustedMinute = raw
 
   // データを構造ごと上書き（minuteを明示）
   const updatedShots = [...shots]
@@ -444,6 +488,13 @@ const handleOpponentDelete = async (index: number) => {
         <p><strong>スコア：</strong>{match.score_for} - {match.score_against}</p>
       </div>
 
+      <div className={styles.section}>
+        <h2>ボール支配率</h2>
+        <p><strong>前半：</strong>自 {teamFirst + oppFirst > 0 ? Math.round((teamFirst / (teamFirst + oppFirst)) * 100) : '-'}% ／ 相手 {teamFirst + oppFirst > 0 ? Math.round((oppFirst / (teamFirst + oppFirst)) * 100) : '-'}%</p>
+        <p><strong>後半：</strong>自 {teamSecond + oppSecond > 0 ? Math.round((teamSecond / (teamSecond + oppSecond)) * 100) : '-'}% ／ 相手 {teamSecond + oppSecond > 0 ? Math.round((oppSecond / (teamSecond + oppSecond)) * 100) : '-'}%</p>
+        <p><strong>合計：</strong>自 {totalHold > 0 ? Math.round((totalTeam / totalHold) * 100) : '-'}% ／ 相手 {totalHold > 0 ? Math.round((totalOpp / totalHold) * 100) : '-'}%</p>
+      </div>
+
 <div className={styles.section}>
   <h2>合計データ</h2>
 
@@ -464,7 +515,6 @@ const handleOpponentDelete = async (index: number) => {
     <strong>{decisionRate}%</strong>
   </div>
 </div>
-
 <div className={styles.cardRow}>
   <div className={styles.statCard}>
     <span>得点（前半 / 後半）</span>
@@ -485,24 +535,41 @@ const handleOpponentDelete = async (index: number) => {
 </div>
 
 <div className={styles.cardRow}>
-  <div className={styles.statCard}>
-    <span>背番号別 シュート / 得点</span>
-    <ul className={styles.inlineList}>
-      {Object.entries(shotByNumber).map(([num, count]) => {
-        const goals = goalsByNumber[num] || 0
-        return (
-          <li key={num}>#{num}：{count}本（{goals}得点）</li>
-        )
-      })}
-    </ul>
-  </div>
-  <div className={styles.statCard}>
-    <span>時間入力（任意）</span>
-    <ul className={styles.inlineList}>
-      {shotsWithTime.length > 0 ? (
-        shotsWithTime.map((s, i) => <li key={i}>{s}</li>)
-      ) : <li>記録なし</li>}
-    </ul>
+  <div className={styles.statCard} style={{ overflowX: 'auto' }}>
+    <h3 style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.5rem' }}>
+      背番号別：xG
+    </h3>
+    <table style={{ minWidth: '700px', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+      <thead>
+        <tr style={{ borderBottom: '1px solid #ccc' }}>
+          <th style={thStyle}>背番号</th>
+          <th style={thStyle}>シュート数</th>
+          <th style={thStyle}>得点</th>
+          <th style={thStyle}>xG合計</th>
+          <th style={thStyle}>決定率</th>
+          <th style={thStyle}>効率（得点÷xG）</th>
+        </tr>
+      </thead>
+      <tbody>
+        {Object.keys(shotByNumber).map(num => {
+          const shots = shotByNumber[num]
+          const goals = goalsByNumber[num] || 0
+          const xg = xgByNumber?.[num] || 0
+          const decisionRate = shots > 0 ? Math.round((goals / shots) * 100) : 0
+          const efficiency = xg > 0 ? Math.round((goals / xg) * 100) : 0
+          return (
+            <tr key={num} style={{ borderBottom: '1px solid #eee' }}>
+              <td style={tdStyle}>#{num}</td>
+              <td style={tdStyle}>{shots}</td>
+              <td style={tdStyle}>{goals}</td>
+              <td style={tdStyle}>{xg.toFixed(2)}</td>
+              <td style={tdStyle}>{decisionRate}%</td>
+              <td style={tdStyle}>{efficiency}%</td>
+            </tr>
+          )
+        })}
+      </tbody>
+    </table>
   </div>
 </div>
 
@@ -536,7 +603,7 @@ const handleOpponentDelete = async (index: number) => {
 </p>
 <p>{scoringComment}</p>
 
-<h4 style={{ marginTop: '1rem' }}>【時間帯別 xG（自チーム）】</h4>
+<h4 style={{ marginTop: '1rem' }}>時間帯別 xG</h4>
 <table className={styles.timeZoneTable}>
   <tbody>
     {Object.entries(xgByTimeZone).map(([zone, val]) => (
@@ -545,6 +612,38 @@ const handleOpponentDelete = async (index: number) => {
         <td>{val.toFixed(2)}</td>
       </tr>
     ))}
+  </tbody>
+</table>
+
+<h4 style={{ marginTop: '2rem', fontWeight: 'bold' }}>
+  ゾーン別：xG
+</h4>
+
+<table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+  <thead>
+    <tr style={{ borderBottom: '1px solid #ccc' }}>
+      <th style={thStyle}>ゾーン</th>
+      <th style={thStyle}>シュート数</th>
+      <th style={thStyle}>xG合計</th>
+      <th style={thStyle}>得点</th>
+      <th style={thStyle}>決定率</th>
+    </tr>
+  </thead>
+  <tbody>
+    {Object.entries(zoneStats).map(([zone, stat]) => {
+      const efficiencyPercent =
+        stat.totalXg > 0 ? Math.round((stat.goals / stat.totalXg) * 100) : 0
+
+      return (
+        <tr key={zone} style={{ borderBottom: '1px solid #eee' }}>
+          <td style={tdStyle}>{zone}</td>
+          <td style={tdStyle}>{stat.count}</td>
+          <td style={tdStyle}>{stat.totalXg.toFixed(2)}</td>
+          <td style={tdStyle}>{stat.goals}</td>
+          <td style={tdStyle}>{efficiencyPercent}%</td>
+        </tr>
+      )
+    })}
   </tbody>
 </table>
 
@@ -565,7 +664,6 @@ const handleOpponentDelete = async (index: number) => {
   <strong>{concedeRate}%</strong>
 </div>
 </div>
-
 <div className={styles.cardRow}>
   <div className={styles.statCard}>
     <span>失点（前半 / 後半）</span>
@@ -586,24 +684,41 @@ const handleOpponentDelete = async (index: number) => {
 </div>
 
 <div className={styles.cardRow}>
-  <div className={styles.statCard}>
-    <span>背番号別 相手シュート / 失点</span>
-    <ul className={styles.inlineList}>
-      {Object.entries(opponentShotsByNumber).map(([num, count]) => {
-        const goals = opponentGoalsByNumber[num] || 0
-        return (
-          <li key={num}>#{num}：{count}本（{goals}失点）</li>
-        )
-      })}
-    </ul>
-  </div>
-  <div className={styles.statCard}>
-    <span>時間入力（任意）</span>
-    <ul className={styles.inlineList}>
-      {opponentShotsWithTime.length > 0 ? (
-        opponentShotsWithTime.map((s, i) => <li key={i}>{s}</li>)
-      ) : <li>記録なし</li>}
-    </ul>
+  <div className={styles.statCard} style={{ overflowX: 'auto' }}>
+    <h3 style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.5rem' }}>
+      相手チーム：xGA
+    </h3>
+    <table style={{ minWidth: '700px', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+      <thead>
+        <tr style={{ borderBottom: '1px solid #ccc' }}>
+          <th style={thStyle}>背番号</th>
+          <th style={thStyle}>シュート数</th>
+          <th style={thStyle}>失点</th>
+          <th style={thStyle}>xGA合計</th>
+          <th style={thStyle}>決定率</th>
+          <th style={thStyle}>効率（失点÷xGA）</th>
+        </tr>
+      </thead>
+      <tbody>
+        {Object.keys(opponentShotsByNumber).map(num => {
+          const shots = opponentShotsByNumber[num]
+          const goals = opponentGoalsByNumber[num] || 0
+          const xga = xgaByNumber?.[num] || 0
+          const decisionRate = shots > 0 ? Math.round((goals / shots) * 100) : 0
+          const efficiency = xga > 0 ? Math.round((goals / xga) * 100) : 0
+          return (
+            <tr key={num} style={{ borderBottom: '1px solid #eee' }}>
+              <td style={tdStyle}>#{num}</td>
+              <td style={tdStyle}>{shots}</td>
+              <td style={tdStyle}>{goals}</td>
+              <td style={tdStyle}>{xga.toFixed(2)}</td>
+              <td style={tdStyle}>{decisionRate}%</td>
+              <td style={tdStyle}>{efficiency}%</td>
+            </tr>
+          )
+        })}
+      </tbody>
+    </table>
   </div>
 </div>
 
@@ -636,7 +751,7 @@ const handleOpponentDelete = async (index: number) => {
 </p>
 <p>{defendingComment}</p>
 
-<h4 style={{ marginTop: '1rem' }}>【時間帯別 xGA（相手）】</h4>
+<h4 style={{ marginTop: '1rem' }}>時間帯別 xGA</h4>
 <table className={styles.timeZoneTable}>
   <tbody>
     {Object.entries(xgaByTimeZone).map(([zone, val]) => (
@@ -649,12 +764,36 @@ const handleOpponentDelete = async (index: number) => {
 </table>
 </div>
 
-      <div className={styles.section}>
-        <h2>ボール支配率</h2>
-        <p><strong>前半：</strong>自 {teamFirst + oppFirst > 0 ? Math.round((teamFirst / (teamFirst + oppFirst)) * 100) : '-'}% ／ 相手 {teamFirst + oppFirst > 0 ? Math.round((oppFirst / (teamFirst + oppFirst)) * 100) : '-'}%</p>
-        <p><strong>後半：</strong>自 {teamSecond + oppSecond > 0 ? Math.round((teamSecond / (teamSecond + oppSecond)) * 100) : '-'}% ／ 相手 {teamSecond + oppSecond > 0 ? Math.round((oppSecond / (teamSecond + oppSecond)) * 100) : '-'}%</p>
-        <p><strong>合計：</strong>自 {totalHold > 0 ? Math.round((totalTeam / totalHold) * 100) : '-'}% ／ 相手 {totalHold > 0 ? Math.round((totalOpp / totalHold) * 100) : '-'}%</p>
-      </div>
+<h4 style={{ marginTop: '2rem', fontWeight: 'bold' }}>
+ ゾーン別：xGA
+</h4>
+<table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+  <thead>
+    <tr style={{ borderBottom: '1px solid #ccc' }}>
+      <th style={thStyle}>ゾーン</th>
+      <th style={thStyle}>シュート数</th>
+      <th style={thStyle}>xGA合計</th>
+      <th style={thStyle}>失点数</th>
+      <th style={thStyle}>決定率</th>
+    </tr>
+  </thead>
+<tbody>
+  {Object.entries(xgaZoneStats).map(([zone, stat]) => {
+    const efficiencyPercent =
+      stat.totalXg > 0 ? Math.round((stat.goals / stat.totalXg) * 100) : 0
+
+    return (
+      <tr key={zone} style={{ borderBottom: '1px solid #eee' }}>
+        <td style={tdStyle}>{zone}</td>
+        <td style={tdStyle}>{stat.count}</td>
+        <td style={tdStyle}>{stat.totalXg.toFixed(2)}</td>
+        <td style={tdStyle}>{stat.goals}</td>
+        <td style={tdStyle}>{efficiencyPercent}%</td>
+      </tr>
+    )
+  })}
+</tbody>
+</table>
 
 <div className={styles.section}>
   <h2>シュート記録（自チーム）</h2>

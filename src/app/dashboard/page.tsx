@@ -225,8 +225,9 @@ useEffect(() => {
         matched = true
 
         const { data: teams, error: teamError } = await supabase
-          .from('teams')
-          .select('id, name')
+        .from('teams')
+        .select('id, name')
+        .eq('trainer_id', user.id)
 
         if (teams) {
           setTeamList(teams)
@@ -400,31 +401,36 @@ useEffect(() => {
 
 return (
   <>
-    <header className={styles.header}>
-      <div className={styles.headerIcon}></div>
-
-      <h1 className={styles.headerTitle}>
-        {role === 'admin' && adminName}
-        {role === 'coach' && teamName}
-      </h1>
-
-      <div className={styles.headerMenu}>
-        <button onClick={() => setMenuOpen(!menuOpen)} className={styles.menuButton}>
-          <Menu size={24} />
-        </button>
-
-{menuOpen && (
-  <div ref={menuRef} className={styles.dropdown}>
-    <button onClick={() => { setMenuOpen(false); router.push('/admin/players/list') }}>選手一覧</button>
-    <button onClick={() => router.push('/evaluation/input')}>選手データ入力</button>
-    <button onClick={() => router.push('/evaluation/view')}>選手データ表示</button>
-    <button onClick={() => { setMenuOpen(false); router.push('/analysis/input') }}>試合分析入力</button>
-    <button onClick={() => { setMenuOpen(false); router.push('/analysis/history') }}>試合履歴</button>
-    <button onClick={() => { setMenuOpen(false); handleLogout() }}>ログアウト</button>
+<header className={styles.header}>
+  <div className={styles.headerLeft}>
+    <span className={styles.siteTitle}>
+      {role === 'admin' && adminName}
+      {role === 'coach' && teamName}
+    </span>
   </div>
-)}
+
+  <div className={styles.headerRight}>
+    <span className={styles.roleLabel}>
+      {role === 'admin' ? '管理者' : role === 'coach' ? 'コーチ' : role === 'player' ? '選手' : '不明'}
+    </span>
+
+    <button onClick={() => setMenuOpen(!menuOpen)} className={styles.menuButton}>
+      <Menu size={20} />
+    </button>
+
+    {menuOpen && (
+      <div ref={menuRef} className={styles.dropdown}>
+        <button onClick={() => { setMenuOpen(false); router.push('/admin/players/list') }}>選手一覧</button>
+        <button onClick={() => router.push('/evaluation/input')}>選手データ入力</button>
+        <button onClick={() => router.push('/evaluation/view')}>選手データ表示</button>
+        <button onClick={() => { setMenuOpen(false); router.push('/analysis/input') }}>試合分析入力</button>
+        <button onClick={() => { setMenuOpen(false); router.push('/analysis/history') }}>試合履歴</button>
+        <button onClick={() => { setMenuOpen(false); handleLogout() }}>ログアウト</button>
       </div>
-    </header>
+    )}
+  </div>
+</header>
+
 
 {role === 'admin' && teamList.length > 0 && (
   <div className={styles.teamSelector}>

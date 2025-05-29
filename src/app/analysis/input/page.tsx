@@ -59,9 +59,10 @@ const [shots, setShots] = useState<ShotRecord[]>([
   { zone: '', number: '', result: '', xg: '', period: '', minute: '' }
 ])
 
-  const [periodTime, setPeriodTime] = useState({
+const [periodTime, setPeriodTime] = useState({
   firstMin: 0, firstSec: 0,
-  secondMin: 0, secondSec: 0
+  secondMin: 0, secondSec: 0,
+  firstHalfBase: 0 // ✅ 追加
 })
 
   const [teamHold, setTeamHold] = useState({
@@ -131,6 +132,7 @@ useEffect(() => {
 
     fetchTeamName()
   }, [router])
+
 
 const totalXg = shots.reduce((sum, shot) => sum + (parseFloat(shot.xg) || 0), 0)
 const goalsTotal = shots.filter(s => s.result === '1').length
@@ -234,7 +236,23 @@ const handleSave = async () => {
     alert('チーム情報の取得に失敗しました')
     return
   }
+  
+  // ✅ 後半のシュートは「前半正規時間（firstHalfBase）」を加算して保存する
+const base = periodTime.firstHalfBase || 0
 
+const processedShots = shots.map((s) => ({
+  ...s,
+  minute: s.period === '後半'
+    ? String(base + parseInt(s.minute || '0'))
+    : s.minute
+}))
+
+const processedOpponentShots = opponentShots.map((s) => ({
+  ...s,
+  minute: s.period === '後半'
+    ? String(base + parseInt(s.minute || '0'))
+    : s.minute
+}))
   // ✅ 正しい team_id を使って match_analyses に保存
   const { error } = await supabase.from('match_analyses').insert([
     {
@@ -247,12 +265,12 @@ const handleSave = async () => {
       score_against: parseInt(matchInfo.scoreAgainst),
       notes: matchInfo.notes,
       analysis_json: {
-        shots,
-        opponentShots,
-        teamHold,
-        opponentHold,
-        periodTime
-      }
+      shots: processedShots, // ✅ 加工済みに差し替え
+      opponentShots: processedOpponentShots, // ✅ 加工済みに差し替え
+      teamHold,
+      opponentHold,
+      periodTime
+}
     }
   ])
 
@@ -372,11 +390,22 @@ return (
         <input type="number" placeholder="相手チーム得点" value={matchInfo.scoreAgainst} onChange={e => setMatchInfo({ ...matchInfo, scoreAgainst: e.target.value })} />
         <textarea placeholder="備考" value={matchInfo.notes} onChange={e => setMatchInfo({ ...matchInfo, notes: e.target.value })} />
       </section>
-
+      
       <section className={styles.section}>
         <h2>② 試合時間・支配率</h2>
         <div>
-          <label>前半 試合時間：</label>
+  <label>前半 正規時間（AT除外）:</label>
+  <input
+    type="number"
+    placeholder="例：30 or 40 or 45など"
+    onChange={e =>
+      setPeriodTime(p => ({ ...p, firstHalfBase: Number(e.target.value) }))
+    }
+  />
+</div>
+
+        <div>
+          <label>前半 試合時間：（ATも含める）</label>
           <input
             type="number"
             placeholder="分"
@@ -389,7 +418,7 @@ return (
           />
         </div>
         <div>
-          <label>後半 試合時間：</label>
+          <label>後半 試合時間：（ATも含める）</label>
           <input
             type="number"
             placeholder="分"

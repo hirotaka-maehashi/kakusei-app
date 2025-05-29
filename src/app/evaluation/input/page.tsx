@@ -113,6 +113,19 @@ const handleSave = async () => {
     return
   }
 
+    // ✅ 重複チェック（player_id + recorded_at のセット）
+  const { data: existing } = await supabase
+    .from('player_evaluations')
+    .select('id')
+    .eq('player_id', playerId)
+    .eq('recorded_at', recordedAt)
+    .maybeSingle()
+
+  if (existing) {
+    setMessage('この選手・日付の評価はすでに登録されています')
+    return
+  }
+
   // ✅ Supabaseに渡すpayloadは型を保証
   const payload: EvaluationForm & {
     player_id: string
@@ -196,7 +209,7 @@ const handleSave = async () => {
         <label>三段跳び(cm)</label>
         <input type="number" onChange={e => handleChange('triple_jump_cm', e.target.value)} />
 
-        <label>ステップ50秒(回)</label>
+        <label>ステップ50(秒)</label>
         <input type="number" onChange={e => handleChange('step_50s_count', e.target.value)} />
 
         <label>シットアップ（30秒）回</label>
