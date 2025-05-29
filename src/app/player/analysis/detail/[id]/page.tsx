@@ -449,7 +449,7 @@ const handleOpponentSaveEdit = async (index: number) => {
 <div className={styles.cardRow}>
   <div className={styles.statCard} style={{ overflowX: 'auto' }}>
     <h3 style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.5rem' }}>
-      相手チーム：xGA
+      背番号別：xG
     </h3>
     <table style={{ minWidth: '700px', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
       <thead>
