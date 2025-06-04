@@ -48,37 +48,24 @@ export default function EvaluationInputPage() {
   const [formData, setFormData] = useState<EvaluationForm>({})
 
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser()
-      if (error || !user) {
-        router.push('/dashboard')
-        return
-      }
+useEffect(() => {
+  const checkAuth = async () => {
+    const { data: { user }, error } = await supabase.auth.getUser()
+    if (error || !user) {
+      router.push('/dashboard')
+      return
+    }
 
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle()
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle()
 
-      if (profile && profile.role === 'admin') {
-        setRole('admin')
-      } else {
-        const { data: team, error: teamError } = await supabase
-          .from('teams')
-          .select('id')
-          .eq('coach_user_id', user.id)
-          .maybeSingle()
+    if (profile?.role === 'admin') {
+      setRole('admin')
 
-        if (team && !teamError) {
-          setRole('coach')
-        } else {
-          router.push('/dashboard')
-          return
-        }
-      }
-
+      // ✅ adminは全選手を取得
       const { data: playersData, error: playersError } = await supabase
         .from('players')
         .select('id, name')
@@ -87,11 +74,38 @@ export default function EvaluationInputPage() {
       if (!playersError && playersData) {
         setPlayers(playersData)
       }
-    }
 
-    checkAuth()
-    console.log('🧪 role (for lint):', role)
-  }, [router, role])
+    } else {
+      // ✅ coachのチームIDを取得
+      const { data: team, error: teamError } = await supabase
+        .from('teams')
+        .select('id')
+        .eq('coach_user_id', user.id)
+        .maybeSingle()
+
+      if (team && !teamError) {
+        setRole('coach')
+
+        // ✅ coachのチーム所属の選手のみ取得
+        const { data: playersData, error: playersError } = await supabase
+          .from('players')
+          .select('id, name')
+          .eq('team_id', team.id)
+          .order('name', { ascending: true })
+
+        if (!playersError && playersData) {
+          setPlayers(playersData)
+        }
+      } else {
+        router.push('/dashboard')
+        return
+      }
+    }
+  }
+
+  checkAuth()
+  console.log('🧪 role (for lint):', role)
+}, [router, role])
 
   const handleChange = (field: string, value: string | number) => {
     const updated = { ...formData, [field]: value }
