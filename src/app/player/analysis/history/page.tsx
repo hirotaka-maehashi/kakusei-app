@@ -275,7 +275,7 @@ return (
 
     <div className={styles.detailButtonArea}>
 <button
-  onClick={() => router.push(`/analysis/detail/${match.id}`)}
+  onClick={() => router.push(`/player/analysis/detail/${match.id}`)}
   className={styles.detailButton}
 >
   詳細を見る <ArrowRight size={14} />
