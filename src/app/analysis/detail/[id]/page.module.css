@@ -349,3 +349,18 @@
   width: 100%;
   box-sizing: border-box;
 }
+
+.attackingThirdWrapper {
+  margin-top: 24px;
+  margin-bottom: 48px; /* ←ここを追加で下に余白 */
+  text-align: center;
+}
+
+.attackingThirdImage {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+

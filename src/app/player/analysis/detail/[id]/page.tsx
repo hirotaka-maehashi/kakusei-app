@@ -293,6 +293,27 @@ function generateZoneStats(shots: Shot[]): Record<string, ZoneStat> {
         <p><strong>合計：</strong>自 {totalHold > 0 ? Math.round((totalTeam / totalHold) * 100) : '-'}% ／ 相手 {totalHold > 0 ? Math.round((totalOpp / totalHold) * 100) : '-'}%</p>
       </div>
 
+ <div
+  className="attacking-third"
+  style={{
+    marginTop: '24px',
+    marginBottom: '48px', // ← これを追加
+    textAlign: 'center'
+  }}
+>
+  <h4>ゾーン別期待値</h4>
+  <img
+    src="/attacking-third.png"
+    alt="アタッキングサード"
+    style={{
+      maxWidth: '100%',
+      height: 'auto',
+      border: '1px solid #ccc',
+      borderRadius: '8px'
+    }}
+  />
+</div>
+
 <div className={styles.section}>
   <h2>合計データ</h2>
 
