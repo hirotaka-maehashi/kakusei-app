@@ -60,6 +60,7 @@ export default function MatchDetailPage() {
   const { id } = useParams()
   const [match, setMatch] = useState<MatchAnalysis | null>(null)
   const router = useRouter()
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [editingShotIndex, setEditingShotIndex] = useState<number | null>(null)
   const [editShot, setEditShot] = useState<Shot | null>(null)
   const [editingOpponentIndex, setEditingOpponentIndex] = useState<number | null>(null)
@@ -281,11 +282,13 @@ function generateZoneStats(shots: Shot[]): Record<string, ZoneStat> {
   return zoneStats
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const handleEditStart = (index: number, shot: Shot) => {
   setEditingShotIndex(index)
   setEditShot({ ...shot })
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const handleSaveEdit = async (index: number) => {
   if (!editShot) return
 
@@ -344,6 +347,7 @@ const adjustedMinute = raw
   setEditShot(null)
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const handleDelete = async (index: number) => {
   const ok = confirm('このシュートを削除しますか？')
   if (!ok) return
