@@ -58,10 +58,6 @@ export default function MatchDetailPage() {
   const { id } = useParams()
   const [match, setMatch] = useState<MatchAnalysis | null>(null)
   const router = useRouter()
-  const [editingShotIndex, setEditingShotIndex] = useState<number | null>(null)
-  const [editShot, setEditShot] = useState<Shot | null>(null)
-  const [editingOpponentIndex, setEditingOpponentIndex] = useState<number | null>(null)
-  const [editOpponentShot, setEditOpponentShot] = useState<Shot | null>(null)
 
   useEffect(() => {
     const fetchMatch = async () => {
@@ -276,116 +272,6 @@ function generateZoneStats(shots: Shot[]): Record<string, ZoneStat> {
   })
 
   return zoneStats
-}
-
-const handleSaveEdit = async (index: number) => {
-  if (!editShot) return
-
-  console.log('✅ 保存直前の zone:', editShot.zone)
-
-  // 入力チェック（undefined や 空文字 対策）
-  const raw = parseInt(editShot.minute ?? '')
-  if (isNaN(raw)) {
-    alert('時間（分）を正しく入力してください')
-    return
-  }
-
-  const adjustedMinute = raw
-
-  // データを構造ごと上書き（minuteを明示）
-  const updatedShots = [...shots]
-  updatedShots[index] = {
-  zone: String(editShot.zone ?? ''), // ✅ ここを明示的に文字列にして確実に保存
-  number: editShot.number ?? '',
-  result: editShot.result ?? '',
-  xg: editShot.xg ?? '',
-  period: editShot.period ?? '',
-  minute: String(adjustedMinute),
-}
-
-  console.log('💾 保存内容（最終）:', updatedShots[index])
-
-  const { error } = await supabase
-    .from('match_analyses')
-    .update({
-      analysis_json: {
-        ...match?.analysis_json,
-        shots: updatedShots,
-      },
-    })
-    .eq('id', match?.id)
-
-  if (error) {
-    alert('❌ 保存失敗')
-    console.error(error)
-    return
-  }
-
-  setMatch(prev =>
-    prev
-      ? {
-          ...prev,
-          analysis_json: {
-            ...prev.analysis_json,
-            shots: updatedShots,
-          },
-        }
-      : null
-  )
-  setEditingShotIndex(null)
-  setEditShot(null)
-}
-
-const handleOpponentSaveEdit = async (index: number) => {
-  if (!editOpponentShot) return
-
-  // 🔍 minute を安全に parse（undefinedや空でも対応）
-  const rawMinute = parseInt(editOpponentShot.minute ?? '')
-  if (isNaN(rawMinute)) {
-    alert('時間（分）を正しく入力してください')
-    return
-  }
-
-  const adjustedMinute = String(rawMinute)
-
-  const updatedShots = [...opponentShots]
-  updatedShots[index] = {
-    ...editOpponentShot,
-    minute: adjustedMinute,
-  }
-
-  console.log('💾 相手シュート保存内容:', updatedShots[index])
-
-  const { error } = await supabase
-    .from('match_analyses')
-    .update({
-      analysis_json: {
-        ...match?.analysis_json,
-        opponentShots: updatedShots,
-      },
-    })
-    .eq('id', match?.id)
-
-  if (error) {
-    alert('❌ 保存失敗')
-    console.error(error)
-    return
-  }
-
-  setMatch(prev =>
-    prev
-      ? {
-          ...prev,
-          analysis_json: {
-            ...prev.analysis_json,
-            opponentShots: updatedShots,
-          },
-        }
-      : null
-  )
-
-  setEditingOpponentIndex(null)
-  setEditOpponentShot(null)
 }
 
   return (
@@ -713,87 +599,17 @@ const handleOpponentSaveEdit = async (index: number) => {
 
   {shots.map((s: Shot, i: number) => (
     <div key={i} className={styles.shotCard}>
-      {editingShotIndex === i ? (
-        <div className={styles.editForm}>
-          <label>背番号:</label>
-          <input
-            type="text"
-            value={editShot?.number || ''}
-            onChange={(e) =>
-              setEditShot(prev => prev ? { ...prev, number: e.target.value } : null)
-            }
-          />
-          <label>ゾーン:</label>
-          <input
-            type="text"
-            value={editShot?.zone || ''}
-            onChange={(e) =>
-              setEditShot(prev => prev ? { ...prev, zone: e.target.value } : null)
-            }
-          />
-          <label>時間帯:</label>
-          <select
-            value={editShot?.period || ''}
-            onChange={(e) =>
-              setEditShot(prev => prev ? { ...prev, period: e.target.value as '前半' | '後半' } : null)
-            }
-          >
-            <option value="">選択</option>
-            <option value="前半">前半</option>
-            <option value="後半">後半</option>
-          </select>
-
-          <label>時間（分）:</label>
-          <input
-            type="number"
-            value={editShot?.minute || ''}
-            onChange={(e) =>
-              setEditShot(prev => prev ? { ...prev, minute: e.target.value } : null)
-            }
-          />
-
-          <label>xG:</label>
-          <input
-            type="number"
-            step="0.01"
-            value={editShot?.xg || ''}
-            onChange={(e) =>
-              setEditShot(prev => prev ? { ...prev, xg: e.target.value } : null)
-            }
-          />
-
-          <label>結果:</label>
-          <select
-            value={editShot?.result || ''}
-            onChange={(e) =>
-              setEditShot(prev => prev ? { ...prev, result: e.target.value } : null)
-            }
-          >
-            <option value="">選択</option>
-            <option value="1">○（得点）</option>
-            <option value="0">×（未達）</option>
-          </select>
-
-          <div className={styles.editButtons}>
-            <button onClick={() => handleSaveEdit(i)}>保存</button>
-            <button onClick={() => setEditingShotIndex(null)}>キャンセル</button>
-          </div>
-        </div>
-      ) : (
-        <>
-          <p><strong>シュート {i + 1}</strong></p>
-          <p>時間帯：{s.period}</p>
-          <p>時間：{s.minute ? `${s.minute}分` : '未入力'}</p>
-          <p>ゾーン：{s.zone}</p>
-          <p>背番号：{s.number}</p>
-          <p>xG：{parseFloat(s.xg || '0').toFixed(2)}</p>
-          <p>結果：
-            <span className={`${styles.resultBadge} ${s.result === '1' ? styles.goal : styles.noGoal}`}>
-              {s.result === '1' ? 'GOAL' : 'NO GOAL'}
-            </span>
-          </p>
-        </>
-      )}
+      <p><strong>シュート {i + 1}</strong></p>
+      <p>時間帯：{s.period}</p>
+      <p>時間：{s.minute ? `${s.minute}分` : '未入力'}</p>
+      <p>ゾーン：{s.zone}</p>
+      <p>背番号：{s.number}</p>
+      <p>xG：{parseFloat(s.xg || '0').toFixed(2)}</p>
+      <p>結果：
+        <span className={`${styles.resultBadge} ${s.result === '1' ? styles.goal : styles.noGoal}`}>
+          {s.result === '1' ? 'GOAL' : 'NO GOAL'}
+        </span>
+      </p>
     </div>
   ))}
 </div>
@@ -803,89 +619,17 @@ const handleOpponentSaveEdit = async (index: number) => {
 
   {opponentShots.map((s: Shot, i: number) => (
     <div key={i} className={styles.shotCard}>
-      {editingOpponentIndex === i ? (
-        <div className={styles.editForm}>
-          <label>背番号:</label>
-          <input
-            type="text"
-            value={editOpponentShot?.number || ''}
-            onChange={(e) =>
-              setEditOpponentShot(prev => prev ? { ...prev, number: e.target.value } : null)
-            }
-          />
-
-          <label>ゾーン:</label>
-          <input
-            type="text"
-            value={editOpponentShot?.zone || ''}
-            onChange={(e) =>
-              setEditOpponentShot(prev => prev ? { ...prev, zone: e.target.value } : null)
-            }
-          />
-
-          <label>時間帯:</label>
-          <select
-            value={editOpponentShot?.period || ''}
-            onChange={(e) =>
-              setEditOpponentShot(prev => prev ? { ...prev, period: e.target.value as '前半' | '後半' } : null)
-            }
-          >
-            <option value="">選択</option>
-            <option value="前半">前半</option>
-            <option value="後半">後半</option>
-          </select>
-
-          <label>時間（分）:</label>
-          <input
-            type="number"
-            value={editOpponentShot?.minute || ''}
-            onChange={(e) =>
-              setEditOpponentShot(prev => prev ? { ...prev, minute: e.target.value } : null)
-            }
-          />
-
-          <label>xGA:</label>
-          <input
-            type="number"
-            step="0.01"
-            value={editOpponentShot?.xg || ''}
-            onChange={(e) =>
-              setEditOpponentShot(prev => prev ? { ...prev, xg: e.target.value } : null)
-            }
-          />
-
-          <label>結果:</label>
-          <select
-            value={editOpponentShot?.result || ''}
-            onChange={(e) =>
-              setEditOpponentShot(prev => prev ? { ...prev, result: e.target.value } : null)
-            }
-          >
-            <option value="">選択</option>
-            <option value="1">○（失点）</option>
-            <option value="0">×（防いだ）</option>
-          </select>
-
-          <div className={styles.editButtons}>
-            <button onClick={() => handleOpponentSaveEdit(i)}>保存</button>
-            <button onClick={() => setEditingOpponentIndex(null)}>キャンセル</button>
-          </div>
-        </div>
-      ) : (
-        <>
-          <p><strong>相手シュート {i + 1}</strong></p>
-          <p>時間帯：{s.period}</p>
-          <p>時間：{s.minute ? `${s.minute}分` : '未入力'}</p>
-          <p>ゾーン：{s.zone}</p>
-          <p>背番号：{s.number}</p>
-          <p>xGA：{parseFloat(s.xg || '0').toFixed(2)}（失点確率 {(parseFloat(s.xg || '0') * 100).toFixed(0)}%）</p>
-          <p>結果：
-            <span className={`${styles.resultBadge} ${s.result === '0' ? styles.save : styles.noSave}`}>
-              {s.result === '0' ? 'SAVE' : 'NO SAVE'}
-            </span>
-          </p>
-        </>
-      )}
+      <p><strong>相手シュート {i + 1}</strong></p>
+      <p>時間帯：{s.period}</p>
+      <p>時間：{s.minute ? `${s.minute}分` : '未入力'}</p>
+      <p>ゾーン：{s.zone}</p>
+      <p>背番号：{s.number}</p>
+      <p>xGA：{parseFloat(s.xg || '0').toFixed(2)}（失点確率 {(parseFloat(s.xg || '0') * 100).toFixed(0)}%）</p>
+      <p>結果：
+        <span className={`${styles.resultBadge} ${s.result === '0' ? styles.save : styles.noSave}`}>
+          {s.result === '0' ? 'SAVE' : 'NO SAVE'}
+        </span>
+      </p>
     </div>
   ))}
 </div>
