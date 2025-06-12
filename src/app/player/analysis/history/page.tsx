@@ -184,6 +184,7 @@ return (
       <div ref={menuRef} className={styles.dropdown}>
         <button onClick={() => router.push('/player/dashboard')}>ダッシュボード</button>
         <button onClick={() => router.push('/player/evaluation/view')}>選手データ詳細</button>
+        <button onClick={() => router.push('/player/videos/list')}>試合動画一覧</button>
        <button onClick={() => { setMenuOpen(false); handleLogout() }}>ログアウト</button>
       </div>
     )}

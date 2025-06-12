@@ -207,11 +207,12 @@ return (
 
     {menuOpen && (
       <div ref={menuRef} className={styles.dropdown}>
-        <button onClick={() => router.push('/dashboard')}>ダッシュボード</button>
-        <button onClick={() => { setMenuOpen(false); router.push('/admin/players/list') }}>選手一覧</button>
+    <button onClick={() => router.push('/dashboard')}>ダッシュボード</button>
+    <button onClick={() => { setMenuOpen(false); router.push('/admin/players/list') }}>選手一覧</button>
     <button onClick={() => router.push('/evaluation/input')}>選手データ入力</button>
     <button onClick={() => router.push('/evaluation/view')}>選手データ表示</button>
     <button onClick={() => { setMenuOpen(false); router.push('/analysis/input') }}>試合分析入力</button>
+    <button onClick={() => router.push('/admin/videos/list')}>試合動画一覧</button> 
    <button onClick={() => { setMenuOpen(false); handleLogout() }}>ログアウト</button>
       </div>
     )}

@@ -8,6 +8,19 @@ import dayjs from 'dayjs'
 import { Menu } from 'lucide-react'
 import { useRef } from 'react'
 
+const extractYoutubeId = (url: string): string => {
+  try {
+    if (url.includes('youtube.com/watch?v=')) {
+      return url.split('v=')[1].split('&')[0]
+    } else if (url.includes('youtu.be/')) {
+      return url.split('youtu.be/')[1].split('?')[0]
+    }
+  } catch {
+    return ''
+  }
+  return ''
+}
+
 type AnalysisJson = {
   teamHold?: {
     firstMin?: number
@@ -55,6 +68,8 @@ export default function PlayerDashboardPage() {
   const [evaluations, setEvaluations] = useState<Evaluation[]>([])
   const [menuOpen, setMenuOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const [latestVideoUrl, setLatestVideoUrl] = useState<string | null>(null)
+const [latestVideoId, setLatestVideoId] = useState<string | null>(null)
 
   const highIsBetter = useMemo(() => [
     'distance_km', 'sprint_total_m', 'sprint_count', 'sprint_avg_m',
@@ -213,6 +228,31 @@ const latestDate = useMemo(() => {
   }
 }, [menuOpen])
 
+useEffect(() => {
+  const fetchLatestVideo = async () => {
+    if (!teamId || !latestMatch) return
+
+    const { data, error } = await supabase
+      .from('videos')
+      .select('id, youtube_url')
+      .eq('team_id', teamId)
+      .eq('match_date', latestMatch.match_date)
+      .maybeSingle()
+
+    if (error) {
+      console.warn('❌ 動画取得失敗:', error)
+      return
+    }
+
+    if (data?.youtube_url) {
+      setLatestVideoUrl(data.youtube_url)
+      setLatestVideoId(data.id)
+    }
+  }
+
+  fetchLatestVideo()
+}, [teamId, latestMatch])
+
   return (
     <main className={styles.container}>
  <header className={styles.header}>
@@ -227,6 +267,7 @@ const latestDate = useMemo(() => {
       <div ref={dropdownRef} className={styles.dropdown}>
         <button onClick={() => router.push('/player/evaluation/view')}>選手データ詳細</button>
         <button onClick={() => router.push('/player/analysis/history')}>試合履歴</button>
+        <button onClick={() => router.push('/player/videos/list')}>試合動画一覧</button>
         <button
           onClick={() => {
             localStorage.removeItem('playerId')
@@ -328,6 +369,33 @@ const latestDate = useMemo(() => {
   <p>試合データがまだ登録されていません。</p>
 )}
 
+<div className={styles.videoSection}>
+  <h3>直近の試合動画</h3>
+  <div className={styles.videoWrapper}>
+    {latestVideoUrl ? (
+      <iframe
+        width="100%"
+        height="315"
+        src={`https://www.youtube.com/embed/${extractYoutubeId(latestVideoUrl)}`}
+        frameBorder="0"
+        allowFullScreen
+      />
+    ) : (
+      <p style={{ textAlign: 'center', color: '#777' }}>動画はまだ登録されていません。</p>
+    )}
+  </div>
+
+  {latestVideoId && (
+    <div className={styles.buttonArea}>
+      <button
+        className={styles.detailButton}
+        onClick={() => router.push(`/player/videos/${latestVideoId}`)}
+      >
+        動画の詳細を見る →
+      </button>
+    </div>
+  )}
+</div>
 
 <section>
 <h2 className={styles.sectionTitle}>

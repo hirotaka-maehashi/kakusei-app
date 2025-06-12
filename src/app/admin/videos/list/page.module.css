@@ -1,0 +1,253 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #004080;
+  color: #fff;
+  padding: 1rem 1.5rem;
+  position: relative;
+}
+
+.headerLeft {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+}
+
+.menuButton {
+  background: none;
+  border: none;
+  color: #fff;
+  margin-left: 1rem;
+  cursor: pointer;
+}
+
+.dropdown {
+  position: absolute;
+  right: 1rem;
+  top: 60px;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+}
+
+.dropdown button {
+  background: none;
+  border: none;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.dropdown button:hover {
+  background-color: #f0f0f0;
+}
+
+.container {
+  padding: 2rem;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  border: 1px solid #ddd;
+}
+
+.table th,
+.table td {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.table th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+}
+
+.table td button {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  background-color: #0070f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.table td button:hover {
+  background-color: #005bb5;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.newButton {
+  background-color: #0070f3;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.newButton:hover {
+  background-color: #005bb5;
+}
+
+.videoList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+/* 修正点ここから */
+.videoCard {
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #fff;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+/* 修正点ここまで */
+
+.videoInfo {
+  flex: 1;
+  min-width: 160px;
+}
+
+.videoInfo p {
+  margin: 0.2rem 0;
+  font-size: 0.95rem;
+}
+
+.videoTitle {
+  font-weight: bold;
+  font-size: 1.05rem;
+}
+
+.videoCardCompact {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fff;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease;
+}
+
+.videoCardCompact:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.videoCardCompact {
+  cursor: pointer;
+}
+
+.thumbnail {
+  width: 100%;
+  display: block;
+}
+
+.videoMeta {
+  padding: 8px 12px;
+}
+
+.videoDate,
+.videoTitle,
+.videoScore {
+  margin: 0.3rem 0;
+  font-size: 0.9rem;
+}
+
+.videoTitle {
+  font-weight: bold;
+}
+
+.detailButton {
+  background-color: #0070f3;
+  color: white;
+  border: none;
+  padding: 0.5rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.detailButton:hover {
+  background-color: #005bb5;
+}
+
+.buttonRow {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.deleteButton {
+  background-color: #e63946;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.deleteButton:hover {
+  background-color: #c82333;
+}
+
+/* ✅ スマホ用レスポンシブ対応 */
+@media (max-width: 600px) {
+  .videoCard {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .buttonRow {
+    display: flex;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .detailButton,
+  .deleteButton {
+    width: auto; /* ← ここがポイント */
+    flex: 1 1 auto;
+    min-width: 120px;
+  }
+}
+

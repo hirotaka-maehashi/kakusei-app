@@ -364,6 +364,7 @@ return (
     <button onClick={() => router.push('/evaluation/input')}>選手データ入力</button>
     <button onClick={() => router.push('/evaluation/view')}>選手データ表示</button>
     <button onClick={() => { setMenuOpen(false); router.push('/analysis/history') }}>試合履歴</button>
+    <button onClick={() => router.push('/admin/videos/list')}>試合動画一覧</button> 
     <button onClick={() => { setMenuOpen(false); handleLogout(role) }}>ログアウト</button>
   </div>
 )}

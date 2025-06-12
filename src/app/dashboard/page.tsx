@@ -7,6 +7,19 @@ import styles from './page.module.css'
 import { Menu } from 'lucide-react'
 import dayjs from 'dayjs'
 
+const extractYoutubeId = (url: string): string => {
+  try {
+    if (url.includes('youtube.com/watch?v=')) {
+      return url.split('v=')[1].split('&')[0]
+    } else if (url.includes('youtu.be/')) {
+      return url.split('youtu.be/')[1].split('?')[0]
+    }
+  } catch {
+    return ''
+  }
+  return ''
+}
+
 // ✅ typeはすべてここ（関数の外）にまとめる
 type MatchAnalysis = {
   id: string
@@ -69,6 +82,8 @@ export default function DashboardPage() {
   const [players, setPlayers] = useState<Player[]>([])
   const [playerEvaluations, setPlayerEvaluations] = useState<Evaluation[]>([])
   const [teamList, setTeamList] = useState<Team[]>([])
+  const [latestVideoUrl, setLatestVideoUrl] = useState<string | null>(null)
+  const [latestVideoId, setLatestVideoId] = useState<string | null>(null)
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -394,11 +409,37 @@ useEffect(() => {
   fetchEvaluations()
 }, [teamId, players, role])
 
+// 修正済みの useEffect
+useEffect(() => {
+  const fetchLatestVideo = async () => {
+    if (!teamId || !latestMatch) return
+
+    const { data, error } = await supabase
+      .from('videos')
+      .select('id, youtube_url')
+      .eq('team_id', teamId)
+      .eq('match_date', latestMatch.match_date)
+      .maybeSingle()
+
+    if (error) {
+      console.warn('❌ 試合動画の取得に失敗:', error)
+    }
+
+    if (data?.youtube_url) {
+      setLatestVideoUrl(data.youtube_url)
+      setLatestVideoId(data.id) // ✅ IDも保存
+    }
+  }
+
+  fetchLatestVideo()
+}, [teamId, latestMatch])
+
   if (loading) return <p style={{ padding: '2rem' }}>読み込み中...</p>
 
   console.log('🕒 最新評価日:', latestDate)
   console.log('📦 playerEvaluations:', playerEvaluations)
 
+  
 return (
   <>
 <header className={styles.header}>
@@ -425,6 +466,7 @@ return (
         <button onClick={() => router.push('/evaluation/view')}>選手データ表示</button>
         <button onClick={() => { setMenuOpen(false); router.push('/analysis/input') }}>試合分析入力</button>
         <button onClick={() => { setMenuOpen(false); router.push('/analysis/history') }}>試合履歴</button>
+        <button onClick={() => router.push('/admin/videos/list')}>試合動画一覧</button> 
         <button onClick={() => { setMenuOpen(false); handleLogout() }}>ログアウト</button>
       </div>
     )}
@@ -561,6 +603,35 @@ return (
   ) : (
     <p>試合データがまだ登録されていません。</p>
   )}
+
+<div className={styles.videoSection}>
+  <h3>直近の試合動画</h3>
+  <div className={styles.videoWrapper}>
+    {latestVideoUrl ? (
+      <iframe
+        width="100%"
+        height="315"
+        src={`https://www.youtube.com/embed/${extractYoutubeId(latestVideoUrl)}`}
+        frameBorder="0"
+        allowFullScreen
+      />
+    ) : (
+      <p style={{ textAlign: 'center', color: '#777' }}>動画はまだ登録されていません。</p>
+    )}
+  </div>
+
+  {/* ✅ ボタンを条件付きで表示 */}
+  {latestVideoId && (
+    <div className={styles.buttonArea}>
+      <button
+        className={styles.detailButton}
+        onClick={() => router.push(`/admin/videos/${latestVideoId}`)}
+      >
+        動画の詳細を見る →
+      </button>
+    </div>
+  )}
+</div>
 
 <h2 className={styles.sectionTitle}>チーム内トップ選手{latestDate && (<span style={{ fontSize: '0.9rem', fontWeight: 'normal', marginLeft: '0.5rem' }}>（{latestDate}時点）</span>)}</h2>
 <table className={styles.topTable}>
