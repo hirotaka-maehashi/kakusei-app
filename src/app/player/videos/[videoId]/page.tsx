@@ -174,8 +174,8 @@ return (
         {menuOpen && (
           <div ref={menuRef} className={styles.dropdown}>
             <button onClick={() => router.push('/player/dashboard')}>ダッシュボード</button>
-            <button onClick={() => router.push('/player/evaluation/view')}>データ確認</button>
-            <button onClick={() => router.push('/player/videos')}>試合一覧</button>
+            <button onClick={() => router.push('/player/evaluation/view')}>選手データ確認</button>
+            <button onClick={() => router.push('/player/videos/list')}>試合動画一覧</button>
             <button onClick={() => {
               localStorage.removeItem('playerId')
               router.push('/player/login')
@@ -203,41 +203,50 @@ return (
       {description && (
        <div style={{ background: '#f5f5f5', padding: '1rem', borderRadius: '8px', marginTop: '1.5rem' }}>
   <h3>試合ハイライト</h3>
-  <ul style={{ paddingLeft: '1rem', margin: 0 }}>
-    {description.split('\n').map((line, i) => {
-      const match = line.match(/^(\d{1,2}:\d{2})\s?(.*)/)
-      if (match) {
-        const [, time, title] = match
-        const [min, sec] = time.split(':').map(Number)
-        const seconds = min * 60 + sec
-        return (
-          <li key={i}>
-            <button
-  onClick={() => {
-    if (playerRef.current) {
-      playerRef.current.seekTo(seconds, true)
-      playerRef.current.playVideo()
-    }
-  }}
-  style={{
-    color: '#0645AD',
-    textDecoration: 'underline',
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    padding: 0,
-    fontSize: '1rem',
-  }}
->
-  {time} {title}
-</button>
-          </li>
-        )
-      } else {
-        return <li key={i}>{line}</li>
+<ul style={{ paddingLeft: '1rem', margin: 0 }}>
+  {description.split('\n').map((line, i) => {
+    const match = line.match(/^(\d{1,2}:\d{2}(?::\d{2})?)\s?(.*)/)
+    if (match) {
+      const [, time, title] = match
+      const timeParts = time.split(':').map(Number)
+
+      let seconds = 0
+      if (timeParts.length === 3) {
+        const [h, m, s] = timeParts
+        seconds = h * 3600 + m * 60 + s
+      } else if (timeParts.length === 2) {
+        const [m, s] = timeParts
+        seconds = m * 60 + s
       }
-    })}
-  </ul>
+
+      return (
+        <li key={i}>
+          <button
+            onClick={() => {
+              if (playerRef.current) {
+                playerRef.current.seekTo(seconds, true)
+                playerRef.current.playVideo()
+              }
+            }}
+            style={{
+              color: '#0645AD',
+              textDecoration: 'underline',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+              fontSize: '1rem',
+            }}
+          >
+            {time} {title}
+          </button>
+        </li>
+      )
+    } else {
+      return <li key={i}>{line}</li>
+    }
+  })}
+</ul>
 </div>
       )}
     </main>
