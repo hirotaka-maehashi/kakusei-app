@@ -270,6 +270,8 @@ useEffect(() => {
         setTeamId(team.id)
         matched = true
 
+        localStorage.setItem('selectedTeamId', team.id)
+
         const { data: recentList, error: matchError } = await supabase
           .from('match_analyses')
           .select('*, analysis_json')

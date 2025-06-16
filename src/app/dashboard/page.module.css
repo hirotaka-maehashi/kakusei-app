@@ -69,7 +69,7 @@
   padding: 1.5rem;
   background: #f7f9fc;
   min-height: 100vh;
-  padding-bottom: 10rem;
+  padding-bottom: 6rem;
   overflow-y: auto; /* ✅ これを追加 */
   box-sizing: border-box; 
 }
