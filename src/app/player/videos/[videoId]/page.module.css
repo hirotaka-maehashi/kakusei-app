@@ -58,7 +58,8 @@
 /* === 試合動画ページ用 === */
 .container {
   padding: 2rem;
-  max-width: 800px;
+  max-width: 1200px;  /* ← ここを800から拡大 */
+  width: 100%;
   margin: 0 auto;
   background-color: #fff;
 }
@@ -109,22 +110,60 @@
   border: 1px solid #ddd;
 }
 
-.videoWrapper {
-  position: relative;
-  padding-top: 56.25%; /* 16:9 */
+/* === 修正1: コンテナを広げる === */
+.container {
+  padding: 2rem;
+  max-width: 1200px;  /* ← ここを800から拡大 */
   width: 100%;
-  height: 0;
-  overflow: hidden;
-  border-radius: 8px;
+  margin: 0 auto;
+  background-color: #fff;
+}
+
+/* === 修正2: プレイヤー縦横比をCSSで固定 === */
+.videoWrapper {
+  aspect-ratio: 16 / 9;          /* ✅ ここが新方式 */
+  width: 100%;
+  position: relative;
   background: #000;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .videoWrapper iframe,
 .videoWrapper #player {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
   border: 0;
 }
+
+/* === 新規追加: 映像とチャプターを横並びに === */
+.videoHighlightWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .videoHighlightWrapper {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .videoWrapper {
+    flex: 2;
+  }
+
+  .highlightBox {
+    flex: 1;
+    background: #f5f5f5;
+    padding: 1rem;
+    border-radius: 8px;
+    max-height: 480px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+  }
+}
+

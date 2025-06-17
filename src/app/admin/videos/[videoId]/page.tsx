@@ -201,59 +201,77 @@ useEffect(() => {
           <p><strong>スコア:</strong> {video.score_for} - {video.score_against}</p>
         </div>
 
-        <div className={styles.videoBlock}>
-          <div className={styles.videoWrapper}>
-            <div id="player"></div>
-          </div>
-        </div>
+<div className={styles.videoHighlightWrapper}>
+  <div className={styles.videoWrapper}>
+    <div id="player"></div>
+  </div>
 
-        <div style={{ background: '#f5f5f5', padding: '1rem', borderRadius: '8px', marginTop: '1.5rem' }}>
-          <h3>試合ハイライト</h3>
-          <ul style={{ paddingLeft: '1rem', margin: 0 }}>
-            {description.split('\n').map((line, i) => {
-              const match = line.match(/^(\d{1,2}:\d{2}(?::\d{2})?)\s?(.*)/)
-              if (match) {
-                const [, time, title] = match
-                const timeParts = time.split(':').map(Number)
+  <div className={styles.highlightBox}>
+    <h3>試合ハイライト</h3>
+    <ul style={{ paddingLeft: 0, margin: 0 }}>
+      {description.split('\n').map((line, i) => {
+        if (line.trim() === '') return null // 空行はスキップ
 
-                let seconds = 0
-                if (timeParts.length === 3) {
-                  const [h, m, s] = timeParts
-                  seconds = h * 3600 + m * 60 + s
-                } else if (timeParts.length === 2) {
-                  const [m, s] = timeParts
-                  seconds = m * 60 + s
-                }
+        const match = line.match(/^(\d{1,2}:\d{2}(?::\d{2})?)\s?(.*)/)
+        if (match) {
+          const [, time, title] = match
+          const timeParts = time.split(':').map(Number)
+          let seconds = 0
+          if (timeParts.length === 3) {
+            const [h, m, s] = timeParts
+            seconds = h * 3600 + m * 60 + s
+          } else if (timeParts.length === 2) {
+            const [m, s] = timeParts
+            seconds = m * 60 + s
+          }
 
-                return (
-                  <li key={i}>
-                    <button
-                      onClick={() => {
-                        if (playerRef.current) {
-                          playerRef.current.seekTo(seconds, true)
-                          playerRef.current.playVideo()
-                        }
-                      }}
-                      style={{
-                        color: '#0645AD',
-                        textDecoration: 'underline',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        padding: 0,
-                        fontSize: '1rem',
-                      }}
-                    >
-                      {time} {title}
-                    </button>
-                  </li>
-                )
-              } else {
-                return <li key={i}>{line}</li>
-              }
-            })}
-          </ul>
-        </div>
+          return (
+            <li key={i} style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+              <span style={{ marginRight: '0.5em' }}>・</span>
+              <button
+                onClick={() => {
+                  if (playerRef.current) {
+                    playerRef.current.seekTo(seconds, true)
+                    playerRef.current.playVideo()
+                  }
+                }}
+                style={{
+                  color: '#0645AD',
+                  textDecoration: 'underline',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                  fontSize: '1rem',
+                  whiteSpace: 'normal',
+                  wordBreak: 'break-word',
+                  textAlign: 'left',
+                }}
+              >
+                {time} {title}
+              </button>
+            </li>
+          )
+        } else {
+          return (
+            <li key={i} style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+              <span style={{ marginRight: '0.5em' }}>・</span>
+              <span
+                style={{
+                  fontSize: '1rem',
+                  whiteSpace: 'normal',
+                  wordBreak: 'break-word',
+                }}
+              >
+                {line}
+              </span>
+            </li>
+          )
+        }
+      })}
+    </ul>
+  </div>
+</div>
       </main>
     </>
   )
