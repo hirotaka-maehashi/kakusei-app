@@ -418,9 +418,11 @@ useEffect(() => {
 
     const { data, error } = await supabase
       .from('videos')
-      .select('id, youtube_url')
+      .select('id, youtube_url, created_at')
       .eq('team_id', teamId)
       .eq('match_date', latestMatch.match_date)
+      .order('created_at', { ascending: false }) // ✅ 新しい順に並べる
+      .limit(1) // ✅ 1件だけ取得（maybeSingleと同じ動作）
       .maybeSingle()
 
     if (error) {
@@ -430,6 +432,8 @@ useEffect(() => {
     if (data?.youtube_url) {
       setLatestVideoUrl(data.youtube_url)
       setLatestVideoId(data.id) // ✅ IDも保存
+    } else {
+      console.warn('❌ 動画データが見つかりませんでした')
     }
   }
 

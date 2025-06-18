@@ -232,12 +232,14 @@ useEffect(() => {
   const fetchLatestVideo = async () => {
     if (!teamId || !latestMatch) return
 
-    const { data, error } = await supabase
-      .from('videos')
-      .select('id, youtube_url')
-      .eq('team_id', teamId)
-      .eq('match_date', latestMatch.match_date)
-      .maybeSingle()
+const { data, error } = await supabase
+  .from('videos')
+  .select('id, youtube_url, created_at')
+  .eq('team_id', teamId)
+  .eq('match_date', latestMatch.match_date)
+  .order('created_at', { ascending: false }) // ✅ 追加
+  .limit(1)                                   // ✅ 追加
+  .maybeSingle()
 
     if (error) {
       console.warn('❌ 動画取得失敗:', error)
