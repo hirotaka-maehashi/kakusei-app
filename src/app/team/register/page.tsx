@@ -92,7 +92,7 @@ export default function TeamRegisterPage() {
       <input
         className={styles.input}
         type="text"
-        placeholder="チーム名（例：〇〇サッカークラブ）"
+        placeholder="チーム名（例：〇〇クラブ）"
         value={teamName}
         onChange={(e) => setTeamName(e.target.value)}
       />
@@ -102,7 +102,7 @@ export default function TeamRegisterPage() {
         value={selectedTrainerId}
         onChange={(e) => setSelectedTrainerId(e.target.value)}
       >
-        <option value="">-- 担当トレーナー（管理者）を選択 --</option>
+        <option value="">-- 担当トレーナーを選択して下さい --</option>
         {trainers.map(trainer => (
           <option key={trainer.id} value={trainer.id}>
             {trainer.name}
