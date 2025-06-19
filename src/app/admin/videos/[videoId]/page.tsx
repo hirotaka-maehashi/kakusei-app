@@ -129,16 +129,31 @@ useEffect(() => {
         return
       }
 
-      const { data: team, error: teamError } = await supabase
-        .from('teams')
-        .select('id')
-        .or(`coach_user_id.eq.${user.id},trainer_id.eq.${user.id}`)
-        .maybeSingle()
+      const selectedTeamId = localStorage.getItem('selectedTeamId')
 
-      if (teamError || !team) {
-        setError('チーム情報が取得できません')
-        return
-      }
+if (!selectedTeamId) {
+  setError('チームが選択されていません')
+  return
+}
+
+const { data: team, error: teamError } = await supabase
+  .from('teams')
+  .select('id, trainer_id, coach_user_id')
+  .eq('id', selectedTeamId)
+  .maybeSingle()
+
+if (teamError || !team) {
+  setError('チーム情報が取得できません')
+  return
+}
+
+// 自分がこのチームに所属しているかチェック
+const isRelated = team.trainer_id === user.id || team.coach_user_id === user.id
+
+if (!isRelated) {
+  setError('この動画にはアクセスできません')
+  return
+}
 
       const { data: videoData, error: videoError } = await supabase
         .from('videos')

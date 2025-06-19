@@ -47,43 +47,58 @@ export default function VideoListPage() {
   }
 
   useEffect(() => {
-  const fetchVideos = async () => {
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
+ const fetchVideos = async () => {
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
 
-    if (!user || authError) {
-      router.push('/login')
-      return
-    }
-
-    // 自分が紐づいているチームを取得（承認チェックなど一切なし）
-    const { data: team, error: teamError } = await supabase
-      .from('teams')
-      .select('id')
-      .eq('coach_user_id', user.id)
-      .maybeSingle()
-
-    if (!team || teamError) {
-      console.warn('❌ 該当チームが見つかりません')
-      return
-    }
-
-    // チームIDに紐づく動画を取得
-    const { data: videosData, error: videoError } = await supabase
-      .from('videos')
-      .select('*')
-      .eq('team_id', team.id)
-      .order('match_date', { ascending: false })
-
-    if (videoError) {
-      console.error('❌ 動画取得エラー:', videoError)
-      return
-    }
-
-    setVideos(videosData || [])
+  if (!user || authError) {
+    router.push('/login')
+    return
   }
+
+  const selectedTeamId = localStorage.getItem('selectedTeamId')
+
+  if (!selectedTeamId) {
+    alert('チームが選択されていません')
+    return
+  }
+
+  // チーム情報を取得（trainer_id / coach_user_id 両方見る）
+  const { data: team, error: teamError } = await supabase
+    .from('teams')
+    .select('id, trainer_id, coach_user_id')
+    .eq('id', selectedTeamId)
+    .maybeSingle()
+
+  if (!team || teamError) {
+    alert('チーム情報の取得に失敗しました')
+    return
+  }
+
+  // 自分がこのチームの関係者か確認
+  const isRelated = team.trainer_id === user.id || team.coach_user_id === user.id
+
+  if (!isRelated) {
+    alert('このチームの動画を見る権限がありません')
+    return
+  }
+
+  // 動画を取得
+  const { data: videosData, error: videoError } = await supabase
+    .from('videos')
+    .select('*')
+    .eq('team_id', team.id)
+    .order('match_date', { ascending: false })
+
+  if (videoError) {
+    console.error('動画取得エラー:', videoError)
+    return
+  }
+
+  setVideos(videosData || [])
+}
 
   fetchVideos()
 }, [router])
